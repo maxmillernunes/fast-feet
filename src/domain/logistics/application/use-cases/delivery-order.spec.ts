@@ -1,7 +1,8 @@
 import { InMemoryOrdersRepository } from '@test/repositories/in-memory-orders-repository'
 import { DeliveryOrderUseCase } from './delivery-order'
-import { Order, OrderStatus } from '../../enterprise/entities/order'
+import { Order } from '../../enterprise/entities/order'
 import { UniqueEntityId } from '@/core/entities/unique-entity-id'
+import { OrderStatus } from '../../enterprise/entities/values-objects/order-status'
 
 let ordersRepository: InMemoryOrdersRepository
 let sut: DeliveryOrderUseCase
@@ -16,7 +17,7 @@ describe('Delivery Order', () => {
     const order = Order.create({
       recipientId: new UniqueEntityId('recipient-1'),
       deliveryDriveId: new UniqueEntityId('driver-1'),
-      status: OrderStatus.PICKED_UP,
+      status: OrderStatus.create('PICKED_UP'),
     })
     await ordersRepository.create(order)
 
@@ -25,7 +26,7 @@ describe('Delivery Order', () => {
       orderId: order.id.toString(),
     })
 
-    expect(deliveredOrder.status).toBe('DELIVERED')
+    expect(deliveredOrder.status.value).toBe('DELIVERED')
     expect(deliveredOrder.deliveredAt).toBeInstanceOf(Date)
   })
 })
