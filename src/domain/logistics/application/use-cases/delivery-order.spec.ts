@@ -31,12 +31,11 @@ describe('Delivery Order', () => {
   })
 
   it('should not be able to deliver an order when the order does not exists', async () => {
-    expect(
-      async () =>
-        await sut.execute({
-          deliveryDriveId: 'driver-1',
-          orderId: 'non-existing-order-id',
-        }),
+    await expect(() =>
+      sut.execute({
+        deliveryDriveId: 'driver-1',
+        orderId: 'non-existing-order-id',
+      }),
     ).rejects.toBeInstanceOf(Error)
   })
 
@@ -48,12 +47,11 @@ describe('Delivery Order', () => {
     })
     await ordersRepository.create(order)
 
-    expect(
-      async () =>
-        await sut.execute({
-          deliveryDriveId: 'driver-1',
-          orderId: order.id.toString(),
-        }),
+    await expect(() =>
+      sut.execute({
+        deliveryDriveId: 'driver-1',
+        orderId: order.id.toString(),
+      }),
     ).rejects.toBeInstanceOf(Error)
   })
 })

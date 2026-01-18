@@ -51,7 +51,7 @@ export class Order extends Entity<OrderProps> {
    * @param driveId - UniqueEntityId of the delivery driver
    * @return void
    */
-  pickUp(driveId: UniqueEntityId) {
+  public pickUp(driveId: UniqueEntityId) {
     if (!this.props.status.canTransitionTo('PICKED_UP')) {
       throw new Error(
         `Cannot transition from ${this.props.status.getContent()} to PICKED_UP`,
@@ -65,7 +65,7 @@ export class Order extends Entity<OrderProps> {
     this.touch()
   }
 
-  deliver(driverId: UniqueEntityId) {
+  public deliver(driverId: UniqueEntityId) {
     if (
       this.props.deliveryDriveId &&
       !this.props.deliveryDriveId.equals(driverId)
@@ -83,7 +83,7 @@ export class Order extends Entity<OrderProps> {
     this.touch()
   }
 
-  return() {
+  public return() {
     if (!this.props.status.canTransitionTo('RETURNED')) {
       throw new Error(
         `Cannot transition from ${this.props.status.getContent()} to RETURNED`,
@@ -95,12 +95,18 @@ export class Order extends Entity<OrderProps> {
     this.touch()
   }
 
-  static create(props: Optional<OrderProps, 'status' | 'createdAt'>) {
-    const order = new Order({
-      ...props,
-      status: props.status ?? OrderStatus.create(),
-      createdAt: props.createdAt ?? new Date(),
-    })
+  static create(
+    props: Optional<OrderProps, 'status' | 'createdAt'>,
+    id?: UniqueEntityId,
+  ) {
+    const order = new Order(
+      {
+        ...props,
+        status: props.status ?? OrderStatus.create(),
+        createdAt: props.createdAt ?? new Date(),
+      },
+      id,
+    )
 
     return order
   }
