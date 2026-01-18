@@ -29,4 +29,31 @@ describe('Delivery Order', () => {
     expect(deliveredOrder.status.value).toBe('DELIVERED')
     expect(deliveredOrder.deliveredAt).toBeInstanceOf(Date)
   })
+
+  it('should not be able to deliver an order when the order does not exists', async () => {
+    expect(
+      async () =>
+        await sut.execute({
+          deliveryDriveId: 'driver-1',
+          orderId: 'non-existing-order-id',
+        }),
+    ).rejects.toBeInstanceOf(Error)
+  })
+
+  it('should not be able to deliver an order when status is WAITING', async () => {
+    const order = Order.create({
+      recipientId: new UniqueEntityId('recipient-1'),
+      deliveryDriveId: new UniqueEntityId('driver-1'),
+      status: OrderStatus.create('WAITING'),
+    })
+    await ordersRepository.create(order)
+
+    expect(
+      async () =>
+        await sut.execute({
+          deliveryDriveId: 'driver-1',
+          orderId: order.id.toString(),
+        }),
+    ).rejects.toBeInstanceOf(Error)
+  })
 })
