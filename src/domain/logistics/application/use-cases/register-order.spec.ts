@@ -19,11 +19,21 @@ describe('Register Order', () => {
 
     await recipientsRepository.create(recipient)
 
-    const { order } = await sut.execute({
+    const result = await sut.execute({
       adminId: 'admin-1',
       recipientId: recipient.id.toString(),
     })
 
-    expect(order.status.value).toBe('WAITING')
+    expect(result.isRight()).toBe(true)
+
+    expect(result.value).toMatchObject({
+      order: expect.objectContaining({
+        status: expect.objectContaining({
+          value: 'WAITING',
+        }),
+        recipientId: recipient.id,
+        createdAt: expect.any(Date),
+      }),
+    })
   })
 })

@@ -3,15 +3,21 @@ import { Order } from '../../enterprise/entities/order'
 import { OrdersRepository } from '../repositories/orders-repository'
 import { RecipientsRepository } from '../repositories/recipients-repository'
 import { OrderStatus } from '../../enterprise/entities/values-objects/order-status'
+import { left, right, type Either } from '@/core/either'
+import { NotAllowedError } from '@/core/errors/errors/not-allowed-error'
+import { ResourceNotFoundError } from '@/core/errors/errors/resource-not-found-error'
 
 interface RegisterOrderUseCaseRequest {
   adminId: string
   recipientId: string
 }
 
-interface RegisterOrderUseCaseResponse {
-  order: Order
-}
+type RegisterOrderUseCaseResponse = Either<
+  NotAllowedError | ResourceNotFoundError,
+  {
+    order: Order
+  }
+>
 
 export class RegisterOrderUseCase {
   constructor(
@@ -27,22 +33,22 @@ export class RegisterOrderUseCase {
     // This is a placeholder for actual permission checking logic
     const isAdmin = adminId ? true : false // Replace with real check
     if (!isAdmin) {
-      throw new Error('Unauthorized: Only admins can register orders')
+      return left(new NotAllowedError())
     }
 
     const recipient = await this.recipientsRepository.findById(recipientId)
 
     if (!recipient) {
-      throw new Error('Recipient not found')
+      return left(new ResourceNotFoundError())
     }
 
     const order = Order.create({
       recipientId: new UniqueEntityId(recipientId),
-      status: OrderStatus.create('WAITING'),
+      status: OrderStatus.create(),
     })
 
     await this.ordersRepository.create(order)
 
-    return { order }
+    return right({ order })
   }
 }

@@ -2,8 +2,11 @@ import { Entity } from '@/core/entities/entity'
 import type { UniqueEntityId } from '@/core/entities/unique-entity-id'
 import { OrderStatus } from './values-objects/order-status'
 import type { Optional } from '@/core/types/optional'
+import { DeliveryDriverDoesNotMatchError } from './errors/delivery-driver-does-not-match-error'
+import { left, right, type Either } from '@/core/either'
+import { OrderCanNotTransitionToDeliveryError } from './errors/order-can-not-transition-to-delivery-error'
 
-interface OrderProps {
+export interface OrderProps {
   recipientId: UniqueEntityId
   deliveryDriveId?: UniqueEntityId
   status: OrderStatus
@@ -12,6 +15,11 @@ interface OrderProps {
   pickedAt?: Date
   deliveredAt?: Date
 }
+
+export type DeliveryOrder = Either<
+  DeliveryDriverDoesNotMatchError | OrderCanNotTransitionToDeliveryError,
+  null
+>
 
 export class Order extends Entity<OrderProps> {
   get recipientId() {
@@ -65,22 +73,24 @@ export class Order extends Entity<OrderProps> {
     this.touch()
   }
 
-  public deliver(driverId: UniqueEntityId) {
+  public deliver(driverId: UniqueEntityId): DeliveryOrder {
     if (
       this.props.deliveryDriveId &&
       !this.props.deliveryDriveId.equals(driverId)
     ) {
-      throw new Error('Driver does not match')
+      return left(new DeliveryDriverDoesNotMatchError())
     }
 
     if (!this.props.status.canTransitionTo('DELIVERED')) {
-      throw new Error('Order must be in PICKED_UP status to be delivered.')
+      return left(new OrderCanNotTransitionToDeliveryError())
     }
 
     this.props.status = OrderStatus.create('DELIVERED')
     this.props.deliveredAt = new Date()
 
     this.touch()
+
+    return right(null)
   }
 
   public return() {

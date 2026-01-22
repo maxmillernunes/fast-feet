@@ -1,15 +1,24 @@
 import { UniqueEntityId } from '@/core/entities/unique-entity-id'
 import type { OrdersRepository } from '../repositories/orders-repository'
 import type { Order } from '../../enterprise/entities/order'
+import { left, right, type Either } from '@/core/either'
+import { ResourceNotFoundError } from '@/core/errors/errors/resource-not-found-error'
+import type { DeliveryDriverDoesNotMatchError } from '../../enterprise/entities/errors/delivery-driver-does-not-match-error'
+import type { OrderCanNotTransitionToDeliveryError } from '../../enterprise/entities/errors/order-can-not-transition-to-delivery-error'
 
 interface DeliveryOrderUseCaseRequest {
   orderId: string
   deliveryDriveId: string
 }
 
-interface DeliveryOrderUseCaseResponse {
-  order: Order
-}
+type DeliveryOrderUseCaseResponse = Either<
+  | ResourceNotFoundError
+  | DeliveryDriverDoesNotMatchError
+  | OrderCanNotTransitionToDeliveryError,
+  {
+    order: Order
+  }
+>
 
 export class DeliveryOrderUseCase {
   constructor(private ordersRepository: OrdersRepository) {}
@@ -21,21 +30,19 @@ export class DeliveryOrderUseCase {
     const order = await this.ordersRepository.findById(orderId)
 
     if (!order) {
-      throw new Error('Order not found.')
+      return left(new ResourceNotFoundError())
     }
 
-    try {
-      order.deliver(new UniqueEntityId(deliveryDriveId))
-    } catch (error) {
-      throw new Error(
-        `Failed to deliver order: ${error instanceof Error ? error.message : String(error)}`,
-      )
+    const result = order.deliver(new UniqueEntityId(deliveryDriveId))
+
+    if (result.isLeft()) {
+      const error = result.value
+
+      return left(error)
     }
 
     await this.ordersRepository.save(order)
 
-    return {
-      order,
-    }
+    return right({ order })
   }
 }

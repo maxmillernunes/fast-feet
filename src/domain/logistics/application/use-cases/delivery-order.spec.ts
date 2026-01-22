@@ -21,22 +21,30 @@ describe('Delivery Order', () => {
     })
     await ordersRepository.create(order)
 
-    const { order: deliveredOrder } = await sut.execute({
+    const result = await sut.execute({
       deliveryDriveId: 'driver-1',
       orderId: order.id.toString(),
     })
 
-    expect(deliveredOrder.status.value).toBe('DELIVERED')
-    expect(deliveredOrder.deliveredAt).toBeInstanceOf(Date)
+    expect(result.isRight()).toBe(true)
+
+    expect(result.value).toMatchObject({
+      order: expect.objectContaining({
+        status: expect.objectContaining({
+          value: 'DELIVERED',
+        }),
+        deliveredAt: expect.any(Date),
+      }),
+    })
   })
 
   it('should not be able to deliver an order when the order does not exists', async () => {
-    await expect(() =>
-      sut.execute({
-        deliveryDriveId: 'driver-1',
-        orderId: 'non-existing-order-id',
-      }),
-    ).rejects.toBeInstanceOf(Error)
+    const result = await sut.execute({
+      deliveryDriveId: 'driver-1',
+      orderId: 'non-existing-order-id',
+    })
+
+    expect(result.isLeft()).toBe(true)
   })
 
   it('should not be able to deliver an order when status is WAITING', async () => {
@@ -47,11 +55,11 @@ describe('Delivery Order', () => {
     })
     await ordersRepository.create(order)
 
-    await expect(() =>
-      sut.execute({
-        deliveryDriveId: 'driver-1',
-        orderId: order.id.toString(),
-      }),
-    ).rejects.toBeInstanceOf(Error)
+    const result = await sut.execute({
+      deliveryDriveId: 'driver-1',
+      orderId: order.id.toString(),
+    })
+
+    expect(result.isLeft()).toBe(true)
   })
 })
