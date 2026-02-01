@@ -1,4 +1,9 @@
-type StatusOptions = 'WAITING' | 'PICKED_UP' | 'DELIVERED' | 'RETURNED'
+export type StatusOptions =
+  | 'CREATED'
+  | 'WAITING'
+  | 'PICKED_UP'
+  | 'DELIVERED'
+  | 'RETURNED'
 
 export class OrderStatus {
   public value: StatusOptions
@@ -21,10 +26,11 @@ export class OrderStatus {
    */
   canTransitionTo(nextStatus: StatusOptions): boolean {
     const transitions: Record<StatusOptions, StatusOptions[]> = {
+      CREATED: ['WAITING'],
       WAITING: ['PICKED_UP'],
       PICKED_UP: ['DELIVERED', 'RETURNED'],
-      DELIVERED: [], // Estado final
-      RETURNED: ['WAITING'], // Pode voltar para espera se for reenviada
+      DELIVERED: [], // The final state
+      RETURNED: ['WAITING'],
     }
 
     return transitions[this.value].includes(nextStatus)

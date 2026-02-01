@@ -1,10 +1,11 @@
 import { UniqueEntityId } from '@/core/entities/unique-entity-id'
-import type { OrdersRepository } from '../repositories/orders-repository'
+import { OrdersRepository } from '../repositories/orders-repository'
 import type { Order } from '../../enterprise/entities/order'
 import { left, right, type Either } from '@/core/either'
 import { ResourceNotFoundError } from '@/core/errors/errors/resource-not-found-error'
 import type { DeliveryDriverDoesNotMatchError } from '../../enterprise/entities/errors/delivery-driver-does-not-match-error'
-import type { OrderCanNotTransitionToDeliveryError } from '../../enterprise/entities/errors/order-can-not-transition-to-delivery-error'
+import type { OrderCanNotTransitionToDeliveryError } from '@/domain/logistics/enterprise/entities/errors/order-can-not-transition-to-delivery-error'
+import type { OrderCanNotTransitionToReturnedError } from '@/domain/logistics/enterprise/entities/errors/order-can-not-transition-to-returned-error'
 
 interface DeliveryOrderUseCaseRequest {
   orderId: string
@@ -14,7 +15,8 @@ interface DeliveryOrderUseCaseRequest {
 type DeliveryOrderUseCaseResponse = Either<
   | ResourceNotFoundError
   | DeliveryDriverDoesNotMatchError
-  | OrderCanNotTransitionToDeliveryError,
+  | OrderCanNotTransitionToDeliveryError
+  | OrderCanNotTransitionToReturnedError,
   {
     order: Order
   }

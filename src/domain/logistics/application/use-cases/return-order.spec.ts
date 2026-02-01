@@ -1,22 +1,23 @@
 import { InMemoryOrdersRepository } from '@test/repositories/in-memory-orders-repository'
-import { DeliveryOrderUseCase } from './delivery-order'
+
 import { Order } from '../../enterprise/entities/order'
 import { UniqueEntityId } from '@/core/entities/unique-entity-id'
 import { OrderStatus } from '../../enterprise/entities/values-objects/order-status'
+import { DeliveryDriverDoesNotMatchError } from '../../enterprise/entities/errors/delivery-driver-does-not-match-error'
 import { ResourceNotFoundError } from '@/core/errors/errors/resource-not-found-error'
-import { OrderCanNotTransitionToDeliveryError } from '@/domain/logistics/enterprise/entities/errors/order-can-not-transition-to-delivery-error'
-import { DeliveryDriverDoesNotMatchError } from '@/domain/logistics/enterprise/entities/errors/delivery-driver-does-not-match-error'
+import { ReturnOrderUseCase } from './return-order'
+import { OrderCanNotTransitionToReturnedError } from '@/domain/logistics/enterprise/entities/errors/order-can-not-transition-to-returned-error'
 
 let ordersRepository: InMemoryOrdersRepository
-let sut: DeliveryOrderUseCase
+let sut: ReturnOrderUseCase
 
-describe('Delivery Order', () => {
+describe('Return Order', () => {
   beforeEach(() => {
     ordersRepository = new InMemoryOrdersRepository()
-    sut = new DeliveryOrderUseCase(ordersRepository)
+    sut = new ReturnOrderUseCase(ordersRepository)
   })
 
-  it('should be able to deliver an order', async () => {
+  it('should be able to return an order', async () => {
     const order = Order.create({
       recipientId: new UniqueEntityId('recipient-1'),
       deliveryDriveId: new UniqueEntityId('driver-1'),
@@ -34,14 +35,14 @@ describe('Delivery Order', () => {
     expect(result.value).toMatchObject({
       order: expect.objectContaining({
         status: expect.objectContaining({
-          value: 'DELIVERED',
+          value: 'RETURNED',
         }),
-        deliveredAt: expect.any(Date),
+        updatedAt: expect.any(Date),
       }),
     })
   })
 
-  it('should not be able to deliver an order when the order does not exists', async () => {
+  it('should not be able to return an order when the order does not exists', async () => {
     const result = await sut.execute({
       deliveryDriveId: 'driver-1',
       orderId: 'non-existing-order-id',
@@ -51,7 +52,7 @@ describe('Delivery Order', () => {
     expect(result.value).toBeInstanceOf(ResourceNotFoundError)
   })
 
-  it('should not be able to deliver an order when status is WAITING', async () => {
+  it('should not be able to return an order when status is WAITING', async () => {
     const order = Order.create({
       recipientId: new UniqueEntityId('recipient-1'),
       deliveryDriveId: new UniqueEntityId('driver-1'),
@@ -65,10 +66,10 @@ describe('Delivery Order', () => {
     })
 
     expect(result.isLeft()).toBe(true)
-    expect(result.value).toBeInstanceOf(OrderCanNotTransitionToDeliveryError)
+    expect(result.value).toBeInstanceOf(OrderCanNotTransitionToReturnedError)
   })
 
-  it('should not be able to deliver an order when the delivery driver does not match', async () => {
+  it('should not be able to return an order when the delivery driver does not match', async () => {
     const order = Order.create({
       recipientId: new UniqueEntityId('recipient-1'),
       deliveryDriveId: new UniqueEntityId('driver-1'),

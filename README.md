@@ -15,11 +15,15 @@
 - OrderPickedUp
 - OrderDelivered
 
+---
+
 ### IAM
 - Responsabilidade: Login, Gestão de Senhas, Perfis (Admin/Entregador) e Proteção de Rotas (RBAC).
 
 #### Agregados:
 - User (com Admin e DeliveryDriver como entidades especializadas ou roles).
+
+---
 
 ### Notifications
 Dá suporte ao Core, mas não é o foco principal. Ele apenas "ouve" e reage.
@@ -28,3 +32,19 @@ Dá suporte ao Core, mas não é o foco principal. Ele apenas "ouve" e reage.
 
 ### Agregados:
 - Notification (Representa o registro de que um aviso foi enviado).
+
+## Features
+
+- [] A aplicação deve ter dois tipos de usuário, entregador e/ou admin
+- [] Deve ser possível realizar login com CPF e Senha
+- [] Deve ser possível realizar o CRUD dos entregadores
+- [] Deve ser possível realizar o CRUD das encomendas
+- [] Deve ser possível realizar o CRUD dos destinatários
+- [] Deve ser possível marcar uma encomenda como aguardando (Disponível para retirada)
+- [] Deve ser possível retirar uma encomenda
+- [] Deve ser possível marcar uma encomenda como entregue
+- [] Deve ser possível marcar uma encomenda como devolvida
+- [] Deve ser possível listar as encomendas com endereços de entrega próximo ao local do entregador
+- [] Deve ser possível alterar a senha de um usuário
+- [] Deve ser possível listar as entregas de um usuário
+- [] Deve ser possível notificar o destinatário a cada alteração no status da encomenda
