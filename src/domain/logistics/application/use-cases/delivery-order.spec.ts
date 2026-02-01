@@ -3,6 +3,9 @@ import { DeliveryOrderUseCase } from './delivery-order'
 import { Order } from '../../enterprise/entities/order'
 import { UniqueEntityId } from '@/core/entities/unique-entity-id'
 import { OrderStatus } from '../../enterprise/entities/values-objects/order-status'
+import { OrderCanNotTransitionToDeliveryError } from '../../enterprise/entities/errors/order-can-not-transition-to-delivery-error'
+import { DeliveryDriverDoesNotMatchError } from '../../enterprise/entities/errors/delivery-driver-does-not-match-error'
+import { ResourceNotFoundError } from '@/core/errors/errors/resource-not-found-error'
 
 let ordersRepository: InMemoryOrdersRepository
 let sut: DeliveryOrderUseCase
@@ -45,6 +48,7 @@ describe('Delivery Order', () => {
     })
 
     expect(result.isLeft()).toBe(true)
+    expect(result.value).toBeInstanceOf(ResourceNotFoundError)
   })
 
   it('should not be able to deliver an order when status is WAITING', async () => {
@@ -61,5 +65,23 @@ describe('Delivery Order', () => {
     })
 
     expect(result.isLeft()).toBe(true)
+    expect(result.value).toBeInstanceOf(OrderCanNotTransitionToDeliveryError)
+  })
+
+  it('should not be able to deliver an order when the delivery driver does not match', async () => {
+    const order = Order.create({
+      recipientId: new UniqueEntityId('recipient-1'),
+      deliveryDriveId: new UniqueEntityId('driver-1'),
+      status: OrderStatus.create('PICKED_UP'),
+    })
+    await ordersRepository.create(order)
+
+    const result = await sut.execute({
+      deliveryDriveId: 'driver-2',
+      orderId: order.id.toString(),
+    })
+
+    expect(result.isLeft()).toBe(true)
+    expect(result.value).toBeInstanceOf(DeliveryDriverDoesNotMatchError)
   })
 })

@@ -29,6 +29,7 @@ export class RegisterOrderUseCase {
     adminId,
     recipientId,
   }: RegisterOrderUseCaseRequest): Promise<RegisterOrderUseCaseResponse> {
+    // TO-DO:
     // Check if the adminId has permission to register orders
     // This is a placeholder for actual permission checking logic
     const isAdmin = adminId ? true : false // Replace with real check
