@@ -28,6 +28,54 @@ export class Recipient extends Entity<RecipientProps> {
     return this.props.document
   }
 
+  get country() {
+    return this.props.country
+  }
+
+  get zipCode() {
+    return this.props.zipCode
+  }
+
+  get state() {
+    return this.props.state
+  }
+
+  get city() {
+    return this.props.city
+  }
+
+  get street() {
+    return this.props.street
+  }
+
+  get neighborhood() {
+    return this.props.neighborhood
+  }
+
+  get complement() {
+    return this.props.complement
+  }
+
+  get latitude() {
+    return this.props.latitude
+  }
+
+  get longitude() {
+    return this.props.longitude
+  }
+
+  get createdAt() {
+    return this.props.createdAt
+  }
+
+  get updatedAt() {
+    return this.props.updatedAt
+  }
+
+  private touch() {
+    this.props.updatedAt = new Date()
+  }
+
   static create(
     props: Optional<RecipientProps, 'createdAt'>,
     id?: UniqueEntityId,

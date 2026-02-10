@@ -6,13 +6,16 @@ import { OrderStatus } from '../../enterprise/entities/values-objects/order-stat
 import { ResourceNotFoundError } from '@/core/errors/errors/resource-not-found-error'
 import { OrderCanNotTransitionToDeliveryError } from '@/domain/logistics/enterprise/entities/errors/order-can-not-transition-to-delivery-error'
 import { DeliveryDriverDoesNotMatchError } from '@/domain/logistics/enterprise/entities/errors/delivery-driver-does-not-match-error'
+import { InMemoryRecipientsRepository } from '@test/repositories/in-memory-recipients-repository'
 
+let recipientRepository: InMemoryRecipientsRepository
 let ordersRepository: InMemoryOrdersRepository
 let sut: DeliveryOrderUseCase
 
 describe('Delivery Order', () => {
   beforeEach(() => {
-    ordersRepository = new InMemoryOrdersRepository()
+    recipientRepository = new InMemoryRecipientsRepository()
+    ordersRepository = new InMemoryOrdersRepository(recipientRepository)
     sut = new DeliveryOrderUseCase(ordersRepository)
   })
 

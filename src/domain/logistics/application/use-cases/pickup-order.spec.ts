@@ -6,13 +6,16 @@ import { OrderStatus } from '../../enterprise/entities/values-objects/order-stat
 import { ResourceNotFoundError } from '@/core/errors/errors/resource-not-found-error'
 import { PickUpOrderUseCase } from './pickup-order'
 import { OrderCanNotTransitionToPickUpError } from '@/domain/logistics/enterprise/entities/errors/order-can-not-transition-to-pickup-error'
+import { InMemoryRecipientsRepository } from '@test/repositories/in-memory-recipients-repository'
 
+let recipientsRepository: InMemoryRecipientsRepository
 let ordersRepository: InMemoryOrdersRepository
 let sut: PickUpOrderUseCase
 
 describe('Pick Up Order', () => {
   beforeEach(() => {
-    ordersRepository = new InMemoryOrdersRepository()
+    recipientsRepository = new InMemoryRecipientsRepository()
+    ordersRepository = new InMemoryOrdersRepository(recipientsRepository)
     sut = new PickUpOrderUseCase(ordersRepository)
   })
 

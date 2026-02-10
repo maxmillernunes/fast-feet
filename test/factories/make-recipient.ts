@@ -16,7 +16,7 @@ export function makeRecipient(
     throw new Error('Failed to create document for recipient factory')
   }
 
-  const address = Recipient.create(
+  const recipient = Recipient.create(
     {
       name: faker.person.fullName(),
       document: document.value,
@@ -34,5 +34,5 @@ export function makeRecipient(
     id,
   )
 
-  return address
+  return recipient
 }

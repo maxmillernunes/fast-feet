@@ -7,13 +7,16 @@ import { DeliveryDriverDoesNotMatchError } from '../../enterprise/entities/error
 import { ResourceNotFoundError } from '@/core/errors/errors/resource-not-found-error'
 import { ReturnOrderUseCase } from './return-order'
 import { OrderCanNotTransitionToReturnedError } from '@/domain/logistics/enterprise/entities/errors/order-can-not-transition-to-returned-error'
+import { InMemoryRecipientsRepository } from '@test/repositories/in-memory-recipients-repository'
 
 let ordersRepository: InMemoryOrdersRepository
+let recipientsRepository: InMemoryRecipientsRepository
 let sut: ReturnOrderUseCase
 
 describe('Return Order', () => {
   beforeEach(() => {
-    ordersRepository = new InMemoryOrdersRepository()
+    recipientsRepository = new InMemoryRecipientsRepository()
+    ordersRepository = new InMemoryOrdersRepository(recipientsRepository)
     sut = new ReturnOrderUseCase(ordersRepository)
   })
 

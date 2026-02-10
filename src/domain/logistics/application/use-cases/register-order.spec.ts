@@ -1,7 +1,7 @@
 import { InMemoryOrdersRepository } from '@test/repositories/in-memory-orders-repository'
-import { RegisterOrderUseCase } from './register-order'
 import { InMemoryRecipientsRepository } from '@test/repositories/in-memory-recipients-repository'
-import { makeRecipient } from '@test/factories/orders/make-recipient'
+import { makeRecipient } from '@test/factories/make-recipient'
+import { RegisterOrderUseCase } from './register-order'
 import { ResourceNotFoundError } from '@/core/errors/errors/resource-not-found-error'
 
 let ordersRepository: InMemoryOrdersRepository

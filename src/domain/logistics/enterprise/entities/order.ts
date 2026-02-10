@@ -121,6 +121,12 @@ export class Order extends Entity<OrderProps> {
     return right(null)
   }
 
+  set recipientId(recipientId: UniqueEntityId) {
+    this.props.recipientId = recipientId
+
+    this.touch()
+  }
+
   static create(
     props: Optional<OrderProps, 'status' | 'createdAt'>,
     id?: UniqueEntityId,
