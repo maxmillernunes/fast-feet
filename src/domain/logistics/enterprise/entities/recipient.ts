@@ -76,6 +76,22 @@ export class Recipient extends Entity<RecipientProps> {
     this.props.updatedAt = new Date()
   }
 
+  public update(props: Omit<RecipientProps, 'createdAt'>) {
+    this.props.document = props.document
+    this.props.name = props.name
+    this.props.country = props.country
+    this.props.zipCode = props.zipCode
+    this.props.state = props.state
+    this.props.city = props.city
+    this.props.street = props.street
+    this.props.neighborhood = props.neighborhood
+    this.props.complement = props.complement
+    this.props.latitude = props.latitude
+    this.props.longitude = props.longitude
+
+    this.touch()
+  }
+
   static create(
     props: Optional<RecipientProps, 'createdAt'>,
     id?: UniqueEntityId,

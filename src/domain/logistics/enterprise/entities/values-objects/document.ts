@@ -1,4 +1,5 @@
 import { Either, left, right } from '@/core/either'
+import { DocumentInvalidError } from '../errors/document-invalid-error'
 
 export class Document {
   private readonly value: string
@@ -21,7 +22,7 @@ export class Document {
     return doc.replace(/\D/g, '')
   }
 
-  static create(rawDocument: string): Either<Error, Document> {
+  static create(rawDocument: string): Either<DocumentInvalidError, Document> {
     const documentFormatted = this.format(rawDocument)
 
     if (documentFormatted.length === 11) {
@@ -32,6 +33,6 @@ export class Document {
       return right(new Document(documentFormatted, 'CNPJ'))
     }
 
-    return left(new Error('Invalid document: must be either CPF or CNPJ'))
+    return left(new DocumentInvalidError())
   }
 }

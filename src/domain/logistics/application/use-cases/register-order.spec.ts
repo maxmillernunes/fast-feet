@@ -10,8 +10,8 @@ let sut: RegisterOrderUseCase
 
 describe('Register Order', () => {
   beforeEach(() => {
-    ordersRepository = new InMemoryOrdersRepository()
     recipientsRepository = new InMemoryRecipientsRepository()
+    ordersRepository = new InMemoryOrdersRepository(recipientsRepository)
     sut = new RegisterOrderUseCase(ordersRepository, recipientsRepository)
   })
 
