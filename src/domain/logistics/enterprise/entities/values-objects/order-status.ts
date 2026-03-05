@@ -12,7 +12,7 @@ export class OrderStatus {
     this.value = value
   }
 
-  static create(value: StatusOptions = 'WAITING') {
+  static create(value: StatusOptions = 'CREATED') {
     return new OrderStatus(value)
   }
 

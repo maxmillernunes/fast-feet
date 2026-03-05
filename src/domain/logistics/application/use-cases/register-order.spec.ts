@@ -10,8 +10,8 @@ let sut: RegisterOrderUseCase
 
 describe('Register Order', () => {
   beforeEach(() => {
-    ordersRepository = new InMemoryOrdersRepository()
     recipientsRepository = new InMemoryRecipientsRepository()
+    ordersRepository = new InMemoryOrdersRepository(recipientsRepository)
     sut = new RegisterOrderUseCase(ordersRepository, recipientsRepository)
   })
 
@@ -30,7 +30,7 @@ describe('Register Order', () => {
     expect(result.value).toMatchObject({
       order: expect.objectContaining({
         status: expect.objectContaining({
-          value: 'WAITING',
+          value: 'CREATED',
         }),
         recipientId: recipient.id,
         createdAt: expect.any(Date),
