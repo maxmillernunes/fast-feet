@@ -2,7 +2,6 @@ import { InMemoryRecipientsRepository } from '@test/repositories/in-memory-recip
 import { EditRecipientUseCase } from './edit-recipient'
 import { faker } from '@faker-js/faker'
 import { makeRecipient } from '@test/factories/make-recipient'
-import { ResourceAlreadyExistsError } from '@/core/errors/errors/resource-already-exists-error'
 import { ResourceNotFoundError } from '@/core/errors/errors/resource-not-found-error'
 import { DocumentInvalidError } from '../../enterprise/entities/errors/document-invalid-error'
 

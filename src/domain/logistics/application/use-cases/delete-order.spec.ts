@@ -1,5 +1,4 @@
 import { InMemoryOrdersRepository } from '@test/repositories/in-memory-orders-repository'
-import { makeRecipient } from '@test/factories/make-recipient'
 import { makeOrder } from '@test/factories/make-order'
 import { ResourceNotFoundError } from '@/core/errors/errors/resource-not-found-error'
 import { NotAllowedError } from '@/core/errors/errors/not-allowed-error'
