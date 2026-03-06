@@ -1,5 +1,6 @@
 import type { PaginationParams } from '@/core/repositories /pagination-params'
 import type { Order } from '../../enterprise/entities/order'
+import type { OrderWithRecipient } from '../../enterprise/entities/values-objects/order-with-recipient'
 
 export type FindManyNearbyOrdersParams = {
   latitude: number
@@ -8,6 +9,7 @@ export type FindManyNearbyOrdersParams = {
 
 export abstract class OrdersRepository {
   abstract findById(id: string): Promise<Order | null>
+  abstract findByIdWithRecipient(id: string): Promise<OrderWithRecipient | null>
   abstract findManyRecent(params: PaginationParams): Promise<Order[]>
   abstract findManyNearby(params: FindManyNearbyOrdersParams): Promise<Order[]>
   abstract create(order: Order): Promise<void>

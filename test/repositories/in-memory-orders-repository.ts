@@ -1,5 +1,6 @@
 import type { PaginationParams } from '@/core/repositories /pagination-params'
 import type { Order } from '@/domain/logistics/enterprise/entities/order'
+import { OrderWithRecipient } from '@/domain/logistics/enterprise/entities/values-objects/order-with-recipient'
 import type {
   FindManyNearbyOrdersParams,
   OrdersRepository,
@@ -56,6 +57,44 @@ export class InMemoryOrdersRepository implements OrdersRepository {
     }
 
     return order
+  }
+
+  async findByIdWithRecipient(id: string): Promise<OrderWithRecipient | null> {
+    const order = this.items.find((order) => order.id.toString() === id)
+
+    if (!order) {
+      return null
+    }
+
+    const recipient = this.recipientsRepository.items.find((recipient) =>
+      recipient.id.equals(order.recipientId),
+    )
+
+    if (!recipient) {
+      throw new Error(
+        `Recipient with ID "${order.recipientId.toString()}" does not exists`,
+      )
+    }
+
+    return OrderWithRecipient.create({
+      id: order.id,
+      deliveryDriveId: order.deliveryDriveId,
+      status: order.status,
+      createdAt: order.createdAt,
+      updatedAt: order.updatedAt,
+      pickedAt: order.pickedAt,
+      deliveredAt: order.deliveredAt,
+      recipient: {
+        id: recipient.id,
+        name: recipient.name,
+        zipCode: recipient.zipCode,
+        state: recipient.state,
+        city: recipient.city,
+        street: recipient.street,
+        neighborhood: recipient.neighborhood,
+        complement: recipient.complement,
+      },
+    })
   }
 
   async save(order: Order): Promise<void> {
