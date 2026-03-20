@@ -1,9 +1,7 @@
 import { InMemoryOrdersRepository } from '@test/repositories/in-memory-orders-repository'
-
-import { Order } from '../../enterprise/entities/order'
-import { UniqueEntityId } from '@/core/entities/unique-entity-id'
-import { OrderStatus } from '../../enterprise/entities/values-objects/order-status'
+import { makeOrder } from '@test/factories/make-order'
 import { ResourceNotFoundError } from '@/core/errors/errors/resource-not-found-error'
+import { OrderStatus } from '../../enterprise/entities/values-objects/order-status'
 import { MarkOrderAsAwaitingUseCase } from './mark-order-as-awaiting'
 import { OrderCanNotTransitionToWaitingError } from '@/domain/logistics/enterprise/entities/errors/order-can-not-transition-to-waiting-error'
 import { InMemoryRecipientsRepository } from '@test/repositories/in-memory-recipients-repository'
@@ -20,8 +18,7 @@ describe('Mark Order As Awaiting', () => {
   })
 
   it('should be able to mark an order as awaiting', async () => {
-    const order = Order.create({
-      recipientId: new UniqueEntityId('recipient-1'),
+    const order = makeOrder({
       status: OrderStatus.create('CREATED'),
     })
     await ordersRepository.create(order)
@@ -54,8 +51,7 @@ describe('Mark Order As Awaiting', () => {
   })
 
   it('should not be able to mark an order as awaiting when status is WAITING', async () => {
-    const order = Order.create({
-      recipientId: new UniqueEntityId('recipient-1'),
+    const order = makeOrder({
       status: OrderStatus.create('WAITING'),
     })
     await ordersRepository.create(order)
@@ -70,8 +66,7 @@ describe('Mark Order As Awaiting', () => {
   })
 
   it('should not be able to mark an order as awaiting when status is PICKED_UP', async () => {
-    const order = Order.create({
-      recipientId: new UniqueEntityId('recipient-1'),
+    const order = makeOrder({
       status: OrderStatus.create('PICKED_UP'),
     })
     await ordersRepository.create(order)
@@ -86,8 +81,7 @@ describe('Mark Order As Awaiting', () => {
   })
 
   it('should not be able to mark an order as awaiting when status is DELIVERED', async () => {
-    const order = Order.create({
-      recipientId: new UniqueEntityId('recipient-1'),
+    const order = makeOrder({
       status: OrderStatus.create('DELIVERED'),
     })
     await ordersRepository.create(order)
