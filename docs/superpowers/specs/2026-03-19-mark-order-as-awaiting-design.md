@@ -36,11 +36,9 @@ src/domain/logistics/enterprise/entities/order.ts
 ### 1. Error (`order-can-not-transition-to-waiting-error.ts`)
 
 ```typescript
-import { Error } from '@/core/errors/errors'
-
 export class OrderCanNotTransitionToWaitingError extends Error {
   constructor() {
-    super('Order cannot transition to waiting status')
+    super('Order must be in CREATED status to be marked as waiting.')
   }
 }
 ```
@@ -106,7 +104,9 @@ export class MarkOrderAsAwaitingUseCase {
 
 - `mark-order-as-awaiting.spec.ts` — testes unitários cobrindo:
   - Sucesso: transição de `CREATED` para `WAITING`
-  - Erro: transição inválida (ex: `WAITING` para `WAITING`)
+  - Erro: transição inválida de `WAITING` para `WAITING`
+  - Erro: transição inválida de `PICKED_UP` para `WAITING`
+  - Erro: transição inválida de `DELIVERED` para `WAITING`
   - Erro: encomenda não encontrada
 
 ## Fluxo de Status
