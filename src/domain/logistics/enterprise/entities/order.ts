@@ -7,6 +7,7 @@ import { DeliveryDriverDoesNotMatchError } from './errors/delivery-driver-does-n
 import { OrderCanNotTransitionToReturnedError } from './errors/order-can-not-transition-to-returned-error'
 import { OrderCanNotTransitionToDeliveryError } from './errors/order-can-not-transition-to-delivery-error'
 import { OrderCanNotTransitionToPickUpError } from './errors/order-can-not-transition-to-pickup-error'
+import { OrderCanNotTransitionToWaitingError } from './errors/order-can-not-transition-to-waiting-error'
 
 export interface OrderProps {
   recipientId: UniqueEntityId
@@ -29,6 +30,8 @@ type ReturnedOrder = Either<
 >
 
 type PickUpOrder = Either<OrderCanNotTransitionToPickUpError, null>
+
+type AwaitingOrder = Either<OrderCanNotTransitionToWaitingError, null>
 
 export class Order extends Entity<OrderProps> {
   get recipientId() {
@@ -116,6 +119,17 @@ export class Order extends Entity<OrderProps> {
 
     this.props.status = OrderStatus.create('RETURNED')
 
+    this.touch()
+
+    return right(null)
+  }
+
+  public markAsAwaiting(): AwaitingOrder {
+    if (!this.props.status.canTransitionTo('WAITING')) {
+      return left(new OrderCanNotTransitionToWaitingError())
+    }
+
+    this.props.status = OrderStatus.create('WAITING')
     this.touch()
 
     return right(null)
