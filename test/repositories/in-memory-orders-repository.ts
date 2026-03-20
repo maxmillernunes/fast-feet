@@ -1,6 +1,7 @@
 import type { PaginationParams } from '@/core/repositories /pagination-params'
 import type { Order } from '@/domain/logistics/enterprise/entities/order'
 import { OrderWithRecipient } from '@/domain/logistics/enterprise/entities/values-objects/order-with-recipient'
+import type { StatusOptions } from '@/domain/logistics/enterprise/entities/values-objects/order-status'
 import type {
   FindManyNearbyOrdersParams,
   OrdersRepository,
@@ -47,6 +48,27 @@ export class InMemoryOrdersRepository implements OrdersRepository {
 
       return distance < 10 // 10km
     })
+  }
+
+  async findManyByDriver(
+    driverId: string,
+    status: StatusOptions[],
+    { page, perPage }: PaginationParams,
+  ): Promise<Order[]> {
+    const orders = this.items.filter(
+      (order) =>
+        order.deliveryDriveId?.toString() === driverId &&
+        status.includes(order.status.value as StatusOptions),
+    )
+
+    const sorted = orders.sort(
+      (a, b) => (b.pickedAt?.getTime() ?? 0) - (a.pickedAt?.getTime() ?? 0),
+    )
+
+    const start = (page - 1) * perPage
+    const end = page * perPage
+
+    return sorted.slice(start, end)
   }
 
   async findById(id: string): Promise<Order | null> {
