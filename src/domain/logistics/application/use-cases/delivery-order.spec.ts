@@ -1,12 +1,12 @@
 import { InMemoryOrdersRepository } from '@test/repositories/in-memory-orders-repository'
+import { makeOrder } from '@test/factories/make-order'
 import { DeliveryOrderUseCase } from './delivery-order'
-import { Order } from '../../enterprise/entities/order'
-import { UniqueEntityId } from '@/core/entities/unique-entity-id'
 import { OrderStatus } from '../../enterprise/entities/values-objects/order-status'
 import { ResourceNotFoundError } from '@/core/errors/errors/resource-not-found-error'
 import { OrderCanNotTransitionToDeliveryError } from '@/domain/logistics/enterprise/entities/errors/order-can-not-transition-to-delivery-error'
 import { DeliveryDriverDoesNotMatchError } from '@/domain/logistics/enterprise/entities/errors/delivery-driver-does-not-match-error'
 import { InMemoryRecipientsRepository } from '@test/repositories/in-memory-recipients-repository'
+import { UniqueEntityId } from '@/core/entities/unique-entity-id'
 
 let recipientRepository: InMemoryRecipientsRepository
 let ordersRepository: InMemoryOrdersRepository
@@ -20,8 +20,7 @@ describe('Delivery Order', () => {
   })
 
   it('should be able to deliver an order', async () => {
-    const order = Order.create({
-      recipientId: new UniqueEntityId('recipient-1'),
+    const order = makeOrder({
       deliveryDriveId: new UniqueEntityId('driver-1'),
       status: OrderStatus.create('PICKED_UP'),
     })
@@ -55,8 +54,7 @@ describe('Delivery Order', () => {
   })
 
   it('should not be able to deliver an order when status is WAITING', async () => {
-    const order = Order.create({
-      recipientId: new UniqueEntityId('recipient-1'),
+    const order = makeOrder({
       deliveryDriveId: new UniqueEntityId('driver-1'),
       status: OrderStatus.create('WAITING'),
     })
@@ -72,8 +70,7 @@ describe('Delivery Order', () => {
   })
 
   it('should not be able to deliver an order when the delivery driver does not match', async () => {
-    const order = Order.create({
-      recipientId: new UniqueEntityId('recipient-1'),
+    const order = makeOrder({
       deliveryDriveId: new UniqueEntityId('driver-1'),
       status: OrderStatus.create('PICKED_UP'),
     })

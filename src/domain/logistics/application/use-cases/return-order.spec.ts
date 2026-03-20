@@ -1,13 +1,12 @@
 import { InMemoryOrdersRepository } from '@test/repositories/in-memory-orders-repository'
-
-import { Order } from '../../enterprise/entities/order'
-import { UniqueEntityId } from '@/core/entities/unique-entity-id'
+import { makeOrder } from '@test/factories/make-order'
 import { OrderStatus } from '../../enterprise/entities/values-objects/order-status'
 import { DeliveryDriverDoesNotMatchError } from '../../enterprise/entities/errors/delivery-driver-does-not-match-error'
 import { ResourceNotFoundError } from '@/core/errors/errors/resource-not-found-error'
 import { ReturnOrderUseCase } from './return-order'
 import { OrderCanNotTransitionToReturnedError } from '@/domain/logistics/enterprise/entities/errors/order-can-not-transition-to-returned-error'
 import { InMemoryRecipientsRepository } from '@test/repositories/in-memory-recipients-repository'
+import { UniqueEntityId } from '@/core/entities/unique-entity-id'
 
 let ordersRepository: InMemoryOrdersRepository
 let recipientsRepository: InMemoryRecipientsRepository
@@ -21,8 +20,7 @@ describe('Return Order', () => {
   })
 
   it('should be able to return an order', async () => {
-    const order = Order.create({
-      recipientId: new UniqueEntityId('recipient-1'),
+    const order = makeOrder({
       deliveryDriveId: new UniqueEntityId('driver-1'),
       status: OrderStatus.create('PICKED_UP'),
     })
@@ -56,8 +54,7 @@ describe('Return Order', () => {
   })
 
   it('should not be able to return an order when status is WAITING', async () => {
-    const order = Order.create({
-      recipientId: new UniqueEntityId('recipient-1'),
+    const order = makeOrder({
       deliveryDriveId: new UniqueEntityId('driver-1'),
       status: OrderStatus.create('WAITING'),
     })
@@ -73,8 +70,7 @@ describe('Return Order', () => {
   })
 
   it('should not be able to return an order when the delivery driver does not match', async () => {
-    const order = Order.create({
-      recipientId: new UniqueEntityId('recipient-1'),
+    const order = makeOrder({
       deliveryDriveId: new UniqueEntityId('driver-1'),
       status: OrderStatus.create('PICKED_UP'),
     })
