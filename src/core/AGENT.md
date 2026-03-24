@@ -1,60 +1,106 @@
 # CORE
 
-Camada compartilhada entre todos os bounded contexts.
+Camada compartilhada por todo o projeto.
 
 ## O QUE CONTÉM
 
 ```
 core/
-├── either.ts           # Either<L, R> monad
-├── entities/           # Entity, ValueObject, UniqueEntityId
-├── errors/             # Erros genéricos (ResourceNotFound, etc)
-├── types/              # Utilitários (Optional)
-└── repositories/        # Interfaces (PaginationParams)
+├── either.ts           # Lidando com erros de forma funcional
+├── entities/           # Entity e ValueObject (bases para domínio)
+├── errors/             # Erros genéricos
+├── types/              # Tipos utilitários
+└── repositories/        # Interfaces genéricas (ex: paginação)
 ```
+
+---
 
 ## EITHER MONAD
 
-Functional Error Handling.
+O Either é como um `try-catch` funcional. Ele representa sucesso ou falha.
+
+### Conceito
+
+- **Left** = Falha (erro)
+- **Right** = Sucesso (dado)
+
+### Como usar
 
 ```typescript
 import { left, right, type Either } from '@/core/either'
 
-// Left = falha
+// Returnar falha
 return left(new ResourceNotFoundError())
 
-// Right = sucesso
+// Retornar sucesso
 return right({ order })
 ```
 
+### Tipos
+
 ```typescript
+// "Ou retorna erro Ou retorna dados"
 type Result = Either<ErrorType, SuccessData>
 
-const result = await useCase.execute(req)
+// Exemplo prático
+type Response = Either<
+  ResourceNotFoundError | NotAllowedError,
+  { order: Order }
+>
+```
+
+### Tratando o resultado
+
+```typescript
+const result = await useCase.execute(request)
 
 if (result.isLeft()) {
-  // tratar erro
+  // Deu errado - tratar erro
+  const error = result.value
   return
 }
 
-// acessar dado
+// Deu certo - usar o dado
 const { order } = result.value
 ```
 
+---
+
 ## PAGINATION
+
+Parâmetros para listagens paginadas.
 
 ```typescript
 interface PaginationParams {
-  page: number
-  perPage: number
+  page: number // Página atual (começa em 1)
+  perPage: number // Itens por página
 }
 ```
 
+---
+
 ## OPTIONAL TYPE
+
+Tipo que torna propriedades opcionais em interfaces.
 
 ```typescript
 import type { Optional } from '@/core/types/optional'
 
-type Props = Optional<EntityProps, 'createdAt' | 'updatedAt'>
-// createdAt e updatedAt são opcionais
+// createdAt e updatedAt são opcionais na criação
+type OrderProps = Optional<BaseOrderProps, 'createdAt' | 'updatedAt'>
+```
+
+---
+
+## VALOR PADRÃO EM PARÂMETROS
+
+Quando criar use cases, use valores padrão para paginação:
+
+```typescript
+async execute({
+  page = 1,
+  perPage = 10,
+}: Request): Promise<Response> {
+  // page e perPage sempre terão valor
+}
 ```

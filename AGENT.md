@@ -1,38 +1,55 @@
 # FAST FEET
 
-Sistema de controle de entregas.
+Sistema de controle de entregas (logística).
+
+## O QUE É
+
+Um sistema onde:
+
+- **Admin** cadastra encomendas e destinatários
+- **Entregador** retira e entrega encomendas
+- O sistema controla o ciclo de vida de cada encomenda
 
 ## STACK
 
-- **Framework:** NestJS + TypeScript
-- **Arquitetura:** DDD + Clean Architecture
-- **ORM:** Prisma (futuro)
-- **Testes:** Vitest
+| Tecnologia | Uso                     |
+| ---------- | ----------------------- |
+| NestJS     | Framework               |
+| TypeScript | Linguagem               |
+| Vitest     | Testes                  |
+| Prisma     | Banco de dados (futuro) |
 
-## ESTRUTURA
+## ARQUITETURA
 
 ```
 src/
-├── core/           # Classes compartilhadas (Entity, Either, etc)
-├── domain/         # Regras de negócio (bounded contexts)
-└── infra/          # Técnico (controllers, database) - futuro
+├── core/        # Compartilhado (Entity, Either, tipos)
+├── domain/      # Regras de negócio
+└── infra/       # Controllers, banco (futuro)
 ```
 
-## REGRAS CRUZADAS
+### Regras Importantes
 
 1. **Isolamento:** `core/` e `domain/` nunca importam de `infra/`
-2. **Imports:** Use paths absolutos (`@/core/`, `@/domain/`)
+2. **Imports:** Sempre paths absolutos (`@/core/`, `@/domain/`)
 3. **Fluxo:** Camadas externas conhecem internas, nunca o contrário
 
-## PADRÃO DE NOME
+## PADRÃO DE NOMES
 
-| Tipo       | Arquivo              | Classe            |
-| ---------- | -------------------- | ----------------- |
-| Entity     | `entity-name.ts`     | `EntityName`      |
-| Use Case   | `verb-noun.ts`       | `VerbNounUseCase` |
-| Repository | `name-repository.ts` | `NameRepository`  |
-| Error      | `name-error.ts`      | `NameError`       |
+| Tipo         | Exemplo de arquivo     | Exemplo de classe      |
+| ------------ | ---------------------- | ---------------------- |
+| Entity       | `order.ts`             | `Order`                |
+| Value Object | `order-status.ts`      | `OrderStatus`          |
+| Use Case     | `register-order.ts`    | `RegisterOrderUseCase` |
+| Repository   | `orders-repository.ts` | `OrdersRepository`     |
+| Error        | `not-found-error.ts`   | `NotFoundError`        |
+| Factory      | `make-order.ts`        | `makeOrder()`          |
 
-## ESCOPO ATUAL
+## ONDE COMEÇAR
 
-Apenas `core/` e `domain/` estão sendo desenvolvidos.
+Cada pasta tem seu `AGENT.md` com o guia específico:
+
+- `src/core/` → Tipos base (Entity, Either, etc)
+- `src/domain/` → Conceitos DDD
+- `src/domain/logistics/` → Domínio de negócio
+- `test/` → Como testar
