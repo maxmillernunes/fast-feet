@@ -1,4 +1,5 @@
 import { Either, left, right } from '@/core/either'
+import { NotAllowedError } from '@/core/errors/errors/not-allowed-error'
 import { UserNotFoundError } from '../../enterprise/errors/user-not-found-error'
 import { InvalidPasswordError } from '../../enterprise/errors/invalid-password-error'
 import { UserRole } from '../../enterprise/entities/values-objects/user-role'
@@ -9,12 +10,13 @@ import { User } from '../../enterprise/entities/user'
 
 interface UpdateDeliveryDriverRequest {
   userId: string
+  deliveryDriverId: string
   name?: string
   password?: string
 }
 
 type UpdateDeliveryDriverResponse = Either<
-  UserNotFoundError | InvalidPasswordError,
+  UserNotFoundError | InvalidPasswordError | NotAllowedError,
   { user: User }
 >
 
@@ -26,13 +28,19 @@ export class UpdateDeliveryDriverUseCase {
 
   async execute({
     userId,
+    deliveryDriverId,
     name,
     password,
   }: UpdateDeliveryDriverRequest): Promise<UpdateDeliveryDriverResponse> {
-    const user = await this.usersRepository.findById(userId)
+    const currentUser = await this.usersRepository.findById(userId)
+    if (!currentUser || currentUser.role !== UserRole.ADMIN) {
+      return left(new NotAllowedError())
+    }
+
+    const user = await this.usersRepository.findById(deliveryDriverId)
 
     if (!user || user.role !== UserRole.DELIVERY_DRIVER) {
-      return left(new UserNotFoundError(userId))
+      return left(new UserNotFoundError(deliveryDriverId))
     }
 
     if (name) {

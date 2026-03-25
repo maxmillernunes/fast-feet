@@ -1,4 +1,5 @@
 import { Either, left, right } from '@/core/either'
+import { NotAllowedError } from '@/core/errors/errors/not-allowed-error'
 import { InvalidCpfError } from '../../enterprise/errors/invalid-cpf-error'
 import { UserAlreadyExistsError } from '../../enterprise/errors/user-already-exists-error'
 import { InvalidPasswordError } from '../../enterprise/errors/invalid-password-error'
@@ -10,13 +11,17 @@ import { HashGenerator } from '../cryptography/hash-generator'
 import { User } from '../../enterprise/entities/user'
 
 interface CreateDeliveryDriverRequest {
+  userId: string
   name: string
   cpf: string
   password: string
 }
 
 type CreateDeliveryDriverResponse = Either<
-  InvalidCpfError | UserAlreadyExistsError | InvalidPasswordError,
+  | NotAllowedError
+  | InvalidCpfError
+  | UserAlreadyExistsError
+  | InvalidPasswordError,
   { user: User }
 >
 
@@ -27,10 +32,16 @@ export class CreateDeliveryDriverUseCase {
   ) {}
 
   async execute({
+    userId,
     name,
     cpf,
     password,
   }: CreateDeliveryDriverRequest): Promise<CreateDeliveryDriverResponse> {
+    const currentUser = await this.usersRepository.findById(userId)
+    if (!currentUser || currentUser.role !== UserRole.ADMIN) {
+      return left(new NotAllowedError())
+    }
+
     if (!Cpf.validate(cpf)) {
       return left(new InvalidCpfError(cpf))
     }

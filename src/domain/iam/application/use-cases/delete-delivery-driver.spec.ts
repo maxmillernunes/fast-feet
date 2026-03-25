@@ -4,6 +4,7 @@ import { DeleteDeliveryDriverUseCase } from './delete-delivery-driver'
 import { makeUser } from '@test/factories/make-user'
 import { UserRole } from '../../enterprise/entities/values-objects/user-role'
 import { UserNotFoundError } from '../../enterprise/errors/user-not-found-error'
+import { NotAllowedError } from '@/core/errors/errors/not-allowed-error'
 
 let usersRepository: InMemoryUsersRepository
 let sut: DeleteDeliveryDriverUseCase
@@ -15,22 +16,63 @@ describe('DeleteDeliveryDriverUseCase', () => {
   })
 
   it('should soft delete a delivery driver', async () => {
-    const user = makeUser()
-    await usersRepository.create(user)
+    const admin = makeUser({ role: UserRole.ADMIN })
+    await usersRepository.create(admin)
 
-    const result = await sut.execute({ userId: user.id.toString() })
+    const deliveryDriver = makeUser({ role: UserRole.DELIVERY_DRIVER })
+    await usersRepository.create(deliveryDriver)
+
+    const result = await sut.execute({
+      userId: admin.id.toString(),
+      deliveryDriverId: deliveryDriver.id.toString(),
+    })
 
     expect(result.isRight()).toBe(true)
     if (result.isRight()) {
       expect(result.value.user.isDeleted).toBe(true)
     }
 
-    const deletedUser = usersRepository.users.find((u) => u.id.equals(user.id))
+    const deletedUser = usersRepository.users.find((u) =>
+      u.id.equals(deliveryDriver.id),
+    )
     expect(deletedUser?.isDeleted).toBe(true)
   })
 
-  it('should return error when user not found', async () => {
-    const result = await sut.execute({ userId: 'non-existent-id' })
+  it('should return NotAllowedError when current user is not an admin', async () => {
+    const deliveryDriver = makeUser({ role: UserRole.DELIVERY_DRIVER })
+    await usersRepository.create(deliveryDriver)
+
+    const result = await sut.execute({
+      userId: deliveryDriver.id.toString(),
+      deliveryDriverId: deliveryDriver.id.toString(),
+    })
+
+    expect(result.isLeft()).toBe(true)
+    if (result.isLeft()) {
+      expect(result.value).toBeInstanceOf(NotAllowedError)
+    }
+  })
+
+  it('should return NotAllowedError when current user is not found', async () => {
+    const result = await sut.execute({
+      userId: 'non-existent-user-id',
+      deliveryDriverId: 'any-id',
+    })
+
+    expect(result.isLeft()).toBe(true)
+    if (result.isLeft()) {
+      expect(result.value).toBeInstanceOf(NotAllowedError)
+    }
+  })
+
+  it('should return error when delivery driver not found', async () => {
+    const admin = makeUser({ role: UserRole.ADMIN })
+    await usersRepository.create(admin)
+
+    const result = await sut.execute({
+      userId: admin.id.toString(),
+      deliveryDriverId: 'non-existent-id',
+    })
 
     expect(result.isLeft()).toBe(true)
     if (result.isLeft()) {
@@ -38,13 +80,19 @@ describe('DeleteDeliveryDriverUseCase', () => {
     }
   })
 
-  it('should return error when user already deleted', async () => {
-    const user = makeUser()
-    await usersRepository.create(user)
-    user.delete()
-    await usersRepository.save(user)
+  it('should return error when delivery driver already deleted', async () => {
+    const admin = makeUser({ role: UserRole.ADMIN })
+    await usersRepository.create(admin)
 
-    const result = await sut.execute({ userId: user.id.toString() })
+    const deliveryDriver = makeUser({ role: UserRole.DELIVERY_DRIVER })
+    await usersRepository.create(deliveryDriver)
+    deliveryDriver.delete()
+    await usersRepository.save(deliveryDriver)
+
+    const result = await sut.execute({
+      userId: admin.id.toString(),
+      deliveryDriverId: deliveryDriver.id.toString(),
+    })
 
     expect(result.isLeft()).toBe(true)
     if (result.isLeft()) {
@@ -56,7 +104,13 @@ describe('DeleteDeliveryDriverUseCase', () => {
     const admin = makeUser({ role: UserRole.ADMIN })
     await usersRepository.create(admin)
 
-    const result = await sut.execute({ userId: admin.id.toString() })
+    const otherAdmin = makeUser({ role: UserRole.ADMIN })
+    await usersRepository.create(otherAdmin)
+
+    const result = await sut.execute({
+      userId: admin.id.toString(),
+      deliveryDriverId: otherAdmin.id.toString(),
+    })
 
     expect(result.isLeft()).toBe(true)
     if (result.isLeft()) {
