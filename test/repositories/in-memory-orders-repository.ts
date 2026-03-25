@@ -58,7 +58,7 @@ export class InMemoryOrdersRepository implements OrdersRepository {
     const orders = this.items.filter(
       (order) =>
         order.deliveryDriveId?.toString() === driverId &&
-        status.includes(order.status.value as StatusOptions),
+        status.includes(order.status.value),
     )
 
     const sorted = orders.sort(
