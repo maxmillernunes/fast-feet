@@ -1,5 +1,5 @@
 import { Either, left, right } from '@/core/either'
-import { InvalidCredentialsError } from '../../enterprise/errors/invalid-credentials-error'
+import { InvalidCredentialsError } from '../../enterprise/entities/errors/invalid-credentials-error'
 import { UsersRepository } from '../repositories/users-repository'
 import { HashComparer } from '../cryptography/hash-comparer'
 import { User } from '../../enterprise/entities/user'

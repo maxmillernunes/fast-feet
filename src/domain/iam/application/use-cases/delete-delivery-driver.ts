@@ -1,6 +1,6 @@
 import { Either, left, right } from '@/core/either'
 import { NotAllowedError } from '@/core/errors/errors/not-allowed-error'
-import { UserNotFoundError } from '../../enterprise/errors/user-not-found-error'
+import { UserNotFoundError } from '../../enterprise/entities/errors/user-not-found-error'
 import { UserRole } from '../../enterprise/entities/values-objects/user-role'
 import { UsersRepository } from '../repositories/users-repository'
 import { User } from '../../enterprise/entities/user'

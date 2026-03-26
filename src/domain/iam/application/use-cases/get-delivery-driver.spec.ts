@@ -2,7 +2,7 @@ import { beforeEach, describe, it, expect } from 'vitest'
 import { InMemoryUsersRepository } from '@test/repositories/in-memory-users-repository'
 import { GetDeliveryDriverUseCase } from './get-delivery-driver'
 import { makeUser } from '@test/factories/make-user'
-import { UserNotFoundError } from '../../enterprise/errors/user-not-found-error'
+import { UserNotFoundError } from '../../enterprise/entities/errors/user-not-found-error'
 import { NotAllowedError } from '@/core/errors/errors/not-allowed-error'
 import { UserRole } from '../../enterprise/entities/values-objects/user-role'
 

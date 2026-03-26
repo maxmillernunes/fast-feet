@@ -3,7 +3,7 @@ import { InMemoryUsersRepository } from '@test/repositories/in-memory-users-repo
 import { DeleteDeliveryDriverUseCase } from './delete-delivery-driver'
 import { makeUser } from '@test/factories/make-user'
 import { UserRole } from '../../enterprise/entities/values-objects/user-role'
-import { UserNotFoundError } from '../../enterprise/errors/user-not-found-error'
+import { UserNotFoundError } from '../../enterprise/entities/errors/user-not-found-error'
 import { NotAllowedError } from '@/core/errors/errors/not-allowed-error'
 
 let usersRepository: InMemoryUsersRepository

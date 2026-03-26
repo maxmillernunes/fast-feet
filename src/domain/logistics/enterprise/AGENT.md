@@ -1,157 +1,142 @@
 # LOGISTICS ENTERPRISE
 
-Entidades, Value Objects e erros específicos do domínio de logística.
+Entities, Value Objects e erros específicos do domínio de logística.
 
 ---
 
-## COMO CRIAR UMA ENTITY
+## COMO CRIAR ENTITY
 
-### Passo 1: Defina os Props
+### Props
 
 Props são os dados que a entidade carrega.
 
 ```typescript
-export interface OrderProps {
-  recipientId: UniqueEntityId // Quem recebe
-  deliveryDriveId?: UniqueEntityId // Quem vai entregar
-  status: OrderStatus // Status atual
-  createdAt: Date // Quando foi criado
-  updatedAt?: Date // Última modificação
-  pickedAt?: Date // Quando foi retirado
-  deliveredAt?: Date // Quando foi entregue
+export interface [Nome]Props {
+  [field]: [Type]
+  [anotherField]?: [Type]
+  status: [StatusVO]
+  createdAt: Date
+  updatedAt?: Date
+  [timestamp]?: Date
 }
 ```
 
-### Passo 2: Crie a Classe
+### Classe
 
 ```typescript
 import { Entity } from '@/core/entities/entity'
 import type { UniqueEntityId } from '@/core/entities/unique-entity-id'
 import type { Optional } from '@/core/types/optional'
-import { OrderStatus } from './values-objects/order-status'
+import { [StatusVO] } from './values-objects/[status-vo]'
 import { left, right, type Either } from '@/core/either'
-import { OrderCanNotTransitionError } from './errors/order-can-not-transition-error'
+import { [Nome]TransitionError } from './errors/[nome]-transition-error'
 
-export class Order extends Entity<OrderProps> {
-  // Getters para acessar dados
+export class [Nome] extends Entity<[Nome]Props> {
+  get [field]() {
+    return this.props.[field]
+  }
+
   get status() {
     return this.props.status
   }
 
-  get deliveryDriveId() {
-    return this.props.deliveryDriveId
-  }
-
-  // Touch atualiza o updatedAt
   private touch() {
     this.props.updatedAt = new Date()
   }
 
-  // Comportamentos de domínio
-  public markAsAwaiting(): Either<OrderCanNotTransitionError, null> {
-    if (!this.props.status.canTransitionTo('WAITING')) {
-      return left(new OrderCanNotTransitionError())
+  public [action](): Either<[Nome]TransitionError, null> {
+    if (!this.props.status.canTransitionTo('[TARGET_STATUS]')) {
+      return left(new [Nome]TransitionError())
     }
 
-    this.props.status = OrderStatus.create('WAITING')
+    this.props.status = [StatusVO].create('[TARGET_STATUS]')
     this.touch()
 
     return right(null)
   }
 
-  // Factory para criar instâncias
   static create(
-    props: Optional<OrderProps, 'status' | 'createdAt'>,
+    props: Optional<[Nome]Props, 'status' | 'createdAt'>,
     id?: UniqueEntityId,
   ) {
-    const order = new Order(
+    const [entity] = new [Nome](
       {
         ...props,
-        status: props.status ?? OrderStatus.create(), // default: CREATED
+        status: props.status ?? [StatusVO].create(),
         createdAt: props.createdAt ?? new Date(),
       },
       id,
     )
 
-    return order
+    return [entity]
   }
 }
 ```
 
-### Regras para Entities
+### Regras
 
-1. **Props são protegidos** → use getters
-2. **Use `private touch()`** → atualiza `updatedAt`
-3. **Métodos retornam Either** → sucesso ou erro
-4. **Use `static create()`** → para criar instâncias
+- Props são protegidos → use getters
+- Use `private touch()` → atualiza `updatedAt`
+- Métodos retornam Either → sucesso ou erro
+- Use `static create()` → para criar instâncias
 
 ---
 
-## COMO CRIAR UM VALUE OBJECT
+## COMO CRIAR VALUE OBJECT
 
 Value Objects são imutáveis e comparados por valor.
 
-### Exemplo: OrderStatus
+### Estrutura
 
 ```typescript
 import { ValueObject } from '@/core/entities/value-object'
 
-interface OrderStatusProps {
+interface [Nome]Props {
   value: string
 }
 
-export class OrderStatus extends ValueObject<OrderStatusProps> {
-  // Construtor privado
-  private constructor(props: OrderStatusProps) {
+export class [Nome] extends ValueObject<[Nome]Props> {
+  private constructor(props: [Nome]Props) {
     super(props)
   }
 
-  // Factory (única forma de criar)
-  static create(status?: string): OrderStatus {
-    return new OrderStatus({ value: status ?? 'CREATED' })
+  static create(status?: string): [Nome] {
+    return new [Nome]({ value: status ?? '[DEFAULT]' })
   }
 
-  // Método de domínio
   canTransitionTo(target: string): boolean {
     const transitions: Record<string, string[]> = {
-      CREATED: ['WAITING'],
-      WAITING: ['PICKED_UP'],
-      PICKED_UP: ['DELIVERED', 'RETURNED'],
-      DELIVERED: [],
-      RETURNED: ['WAITING'],
+      [STATUS_A]: [[STATUS_B]],
+      [STATUS_B]: [[STATUS_C]],
+      [STATUS_C]: [],
     }
     return transitions[this.value]?.includes(target) ?? false
   }
 
-  // Getter para valor
   get value() {
     return this.props.value
   }
 }
 ```
 
-### Regras para Value Objects
+### Regras
 
-1. **Imutável** → sem setters, métodos retornam novos objetos
-2. **Construtor privado** → só cria via `static create()`
-3. **Comparado por valor** → `equals()` usa `JSON.stringify(props)`
+- Imutável → sem setters, métodos retornam novos objetos
+- Construtor privado → só cria via `static create()`
+- Comparado por valor → `equals()` usa comparação de props
 
 ---
 
 ## COMO CRIAR ERROS DE DOMÍNIO
 
-### Estrutura básica
+### Estrutura
 
 ```typescript
-// Em: enterprise/entities/errors/order-transition-error.ts
+// Em: enterprise/entities/errors/[nome]-transition-error.ts
 
-// ❌ Não precisa de import de core
-// ❌ Não implemente interfaces
-// ✅ Apenas extenda Error
-
-export class OrderCanNotTransitionError extends Error {
+export class [Nome]TransitionError extends Error {
   constructor() {
-    super('Order must be in CREATED status to be marked as waiting.')
+    super('[Entity] must be in [CURRENT_STATUS] to [action].')
   }
 }
 ```
@@ -161,23 +146,20 @@ export class OrderCanNotTransitionError extends Error {
 ```
 enterprise/
 ├── entities/
-│   ├── order.ts
-│   └── errors/
-│       ├── order-can-not-transition-error.ts
-│       └── delivery-driver-mismatch-error.ts
-└── value-objects/
-    └── order-status.ts
+│   └── [entity].ts
+└── errors/
+    ├── [entity]-transition-error.ts
+    └── [domain]-error.ts
 ```
 
 ### Padrão da mensagem
 
 Formato: `"Entidade deve estar em STATUS para AÇÃO."`
 
-| Status atual | Status desejado | Mensagem                                                   |
-| ------------ | --------------- | ---------------------------------------------------------- |
-| CREATED      | WAITING         | "Order must be in CREATED status to be marked as waiting." |
-| WAITING      | PICKED_UP       | "Order must be in WAITING status to be picked up."         |
-| PICKED_UP    | DELIVERED       | "Order must be in PICKED_UP status to be delivered."       |
+| Status atual | Status desejado | Mensagem                                      |
+| ------------ | --------------- | --------------------------------------------- |
+| [STATUS_A]   | [STATUS_B]      | "[Entity] must be in [STATUS_A] to [action]." |
+| [STATUS_B]   | [STATUS_C]      | "[Entity] must be in [STATUS_B] to [action]." |
 
 ---
 
@@ -186,24 +168,21 @@ Formato: `"Entidade deve estar em STATUS para AÇÃO."`
 Quando um método pode falhar, retorne Either:
 
 ```typescript
-type PickUpResult = Either<
-  OrderCanNotTransitionError | DriverMismatchError,
+type [Action]Result = Either<
+  [Entity]TransitionError | [Mismatch]Error,
   null
 >
 
-public pickUp(driverId: UniqueEntityId): PickUpResult {
-  // Se não pode transitar
-  if (!this.canTransitionTo('PICKED_UP')) {
-    return left(new OrderCanNotTransitionError())
+public [action]([param]: UniqueEntityId): [Action]Result {
+  if (!this.canTransitionTo('[TARGET_STATUS]')) {
+    return left(new [Entity]TransitionError())
   }
 
-  // Se entregador não é o dono
-  if (!this.isAssignedTo(driverId)) {
-    return left(new DriverMismatchError())
+  if (!this.isAssignedTo([param])) {
+    return left(new [Mismatch]Error())
   }
 
-  // Sucesso
-  this.props.status = OrderStatus.create('PICKED_UP')
+  this.props.status = [StatusVO].create('[TARGET_STATUS]')
   return right(null)
 }
 ```

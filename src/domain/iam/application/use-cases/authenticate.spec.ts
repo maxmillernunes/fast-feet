@@ -3,7 +3,7 @@ import { InMemoryUsersRepository } from '@test/repositories/in-memory-users-repo
 import { HashComparerInMemory } from '@test/cryptography/hash-comparer-in-memory'
 import { makeUser, DEFAULT_PASSWORD } from '@test/factories/make-user'
 import { AuthenticateUseCase } from './authenticate'
-import { InvalidCredentialsError } from '../../enterprise/errors/invalid-credentials-error'
+import { InvalidCredentialsError } from '../../enterprise/entities/errors/invalid-credentials-error'
 import { faker } from '@faker-js/faker'
 
 let usersRepository: InMemoryUsersRepository

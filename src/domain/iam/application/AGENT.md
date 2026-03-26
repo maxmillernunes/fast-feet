@@ -1,4 +1,4 @@
-# LOGISTICS APPLICATION
+# IAM APPLICATION
 
 Use Cases e Repositories deste domínio.
 
@@ -13,39 +13,44 @@ Use Cases orquestram operações de negócio.
 ```typescript
 import { left, right, type Either } from '@/core/either'
 import { [Repository] } from '../repositories/[repository]'
+import { HashComparer } from '../cryptography/hash-comparer'
 import { ResourceNotFoundError } from '@/core/errors/errors/resource-not-found-error'
 import type { [Entity] } from '../../enterprise/entities/[entity]'
 
 interface [Action][Entity]Request {
-  [param]: string
+  [field]: string
+  [credential]: string
 }
 
 type [Action][Entity]Response = Either<
-  ResourceNotFoundError | [Entity]TransitionError,
+  ResourceNotFoundError | InvalidCredentialsError | Invalid[VO]Error,
   { [entity]: [Entity] }
 >
 
 export class [Action][Entity]UseCase {
   constructor(
     private [repository]: [Repository],
+    private hashComparer: HashComparer,
   ) {}
 
   async execute({
-    [param],
+    [field],
+    [credential],
   }: [Action][Entity]Request): Promise<[Action][Entity]Response> {
-    const [entity] = await this.[repository].findById([param])
+    const [entity] = await this.[repository].findBy[Field]([field])
 
     if (![entity]) {
       return left(new ResourceNotFoundError())
     }
 
-    const result = [entity].[action]()
+    const isValid = await this.hashComparer.compare(
+      [credential],
+      [entity].[credentialField],
+    )
 
-    if (result.isLeft()) {
-      return left(result.value)
+    if (!isValid) {
+      return left(new InvalidCredentialsError())
     }
-
-    await this.[repository].save([entity])
 
     return right({ [entity] })
   }
@@ -61,6 +66,61 @@ export class [Action][Entity]UseCase {
 | **Response**    | `Either<Erro, Sucesso>`           |
 | **Constructor** | Recebe repositório via DI         |
 | **execute()**   | Método principal, sempre `async`  |
+
+---
+
+## PADRÃO: USE CASE DE CRIAÇÃO
+
+Para criar novas entidades:
+
+```typescript
+interface Create[Entity]Request {
+  [field]: string
+  [anotherField]: string
+  [credential]: string
+}
+
+type Create[Entity]Response = Either<
+  Invalid[VO]Error | Invalid[Credential]Error | [Entity]AlreadyExistsError,
+  { [entity]: [Entity] }
+>
+
+export class Create[Entity]UseCase {
+  constructor(
+    private [repository]: [Repository],
+    private hashGenerator: HashGenerator,
+  ) {}
+
+  async execute(request: Create[Entity]Request): Promise<Create[Entity]Response> {
+    const [documentVO] = [Document].create(request.[field])
+    if ([documentVO].isLeft()) {
+      return left([documentVO].value)
+    }
+
+    const [credentialVO] = [Credential].create(request.[credential])
+    if ([credentialVO].isLeft()) {
+      return left([credentialVO].value)
+    }
+
+    const existing = await this.[repository].findBy[Field](request.[field])
+    if (existing) {
+      return left(new [Entity]AlreadyExistsError(request.[field]))
+    }
+
+    const hash = await this.hashGenerator.generate(request.[credential])
+
+    const [entity] = [Entity].create({
+      [field]: request.[field],
+      [anotherField]: request.[anotherField],
+      [credentialField]: hash,
+    })
+
+    await this.[repository].create([entity])
+
+    return right({ [entity] })
+  }
+}
+```
 
 ---
 
@@ -91,7 +151,7 @@ Para operações que podem falhar:
 
 ```typescript
 type Response = Either<
-  ResourceNotFoundError | [Entity]TransitionError,
+  ResourceNotFoundError | Invalid[VO]Error,
   { [entity]: [Entity] }
 >
 
@@ -124,15 +184,16 @@ import type { [Entity] } from '../../enterprise/entities/[entity]'
 export abstract class [Repository] {
   abstract findById(id: string): Promise<[Entity] | null>
 
-  abstract findManyRecent(params: PaginationParams): Promise<[Entity][]>
+  abstract findBy[Field]([field]: string): Promise<[Entity] | null>
 
-  abstract findManyBy[Filter](
-    [filterParam]: string,
-    params: PaginationParams,
-  ): Promise<[Entity][]>
+  abstract findMany(params: PaginationParams): Promise<[Entity][]>
+
+  abstract count(): Promise<number>
 
   abstract create([entity]: [Entity]): Promise<void>
+
   abstract save([entity]: [Entity]): Promise<void>
+
   abstract delete([entity]: [Entity]): Promise<void>
 }
 ```
@@ -147,13 +208,21 @@ export class InMemory[Repository] implements [Repository] {
     return this.items.find(([entity]) => [entity].id.toString() === id) ?? null
   }
 
-  async findManyRecent({ page, perPage }: PaginationParams): Promise<[Entity][]> {
+  async findBy[Field]([field]: string): Promise<[Entity] | null> {
+    return this.items.find(([entity]) => [entity].[field] === [field]) ?? null
+  }
+
+  async findMany({ page, perPage }: PaginationParams): Promise<[Entity][]> {
     const start = (page - 1) * perPage
     const end = page * perPage
 
     return this.items
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
       .slice(start, end)
+  }
+
+  async count(): Promise<number> {
+    return this.items.length
   }
 
   async save([entity]: [Entity]): Promise<void> {
@@ -166,7 +235,8 @@ export class InMemory[Repository] implements [Repository] {
   }
 
   async delete([entity]: [Entity]): Promise<void> {
-    this.items = this.items.filter((item) => !item.id.equals([entity].id))
+    const index = this.items.findIndex((item) => item.id.equals([entity].id))
+    this.items[index].props.deletedAt = new Date()
   }
 }
 ```
@@ -180,6 +250,26 @@ export class InMemory[Repository] implements [Repository] {
 
 ---
 
+## CRYPTOGRAPHY
+
+### Interface: HashGenerator
+
+```typescript
+export abstract class HashGenerator {
+  abstract generate(plain: string): Promise<string>
+}
+```
+
+### Interface: HashComparer
+
+```typescript
+export abstract class HashComparer {
+  abstract compare(plain: string, hash: string): Promise<boolean>
+}
+```
+
+---
+
 ## ESTRUTURA DE TESTES
 
 Todo use case tem seu teste na **mesma pasta**:
@@ -189,8 +279,10 @@ application/
 ├── use-cases/
 │   ├── [action]-[entity].ts
 │   └── [action]-[entity].spec.ts
-└── repositories/
-    └── in-memory-[entity]-repository.ts
+├── repositories/
+│   └── in-memory-[entity]-repository.ts
+└── cryptography/
+    └── in-memory-hash-comparer.ts
 ```
 
 ### Padrão de teste
@@ -199,21 +291,24 @@ application/
 import { InMemory[Repository] } from '@test/repositories/in-memory-[repository]'
 import { make[Entity] } from '@test/factories/make-[entity]'
 import { [Action][Entity]UseCase } from './[action]-[entity]'
+import { InMemoryHashComparer } from '../cryptography/in-memory-hash-comparer'
 
 let [repository]: InMemory[Repository]
+let hashComparer: InMemoryHashComparer
 let sut: [Action][Entity]UseCase
 
 describe('[Action] [Entity]', () => {
   beforeEach(() => {
     [repository] = new InMemory[Repository]()
-    sut = new [Action][Entity]UseCase([repository])
+    hashComparer = new InMemoryHashComparer()
+    sut = new [Action][Entity]UseCase([repository], hashComparer)
   })
 
   it('should [action] [entity]', async () => {
     const [entity] = make[Entity]()
     await [repository].create([entity])
 
-    const result = await sut.execute({ [param]: [entity].id.toString() })
+    const result = await sut.execute({ [param]: [entity].[field] })
 
     expect(result.isRight()).toBe(true)
     if (result.isRight()) {
@@ -222,7 +317,7 @@ describe('[Action] [Entity]', () => {
   })
 
   it('should fail when [entity] not found', async () => {
-    const result = await sut.execute({ [param]: 'invalid-id' })
+    const result = await sut.execute({ [param]: 'invalid' })
 
     expect(result.isLeft()).toBe(true)
     expect(result.value).toBeInstanceOf(ResourceNotFoundError)
@@ -235,23 +330,3 @@ describe('[Action] [Entity]', () => {
 1. **Arrange** → setup, criar dados
 2. **Act** → executar a ação
 3. **Assert** → verificar resultado
-
----
-
-## PADRÃO DE PERMISSÕES
-
-| Tipo de Use Case       | Quem pode executar |
-| ---------------------- | ------------------ |
-| Criar, Editar, Deletar | Admin              |
-| Marcar como [STATUS]   | Admin              |
-| [Action], [Action]     | Entregador         |
-| Fetch (listar)         | Ambos              |
-
-### [adminId] vs [driverId]
-
-```typescript
-interface [Action][Entity]Request {
-  [roleId]: string // obrigatório para operações do entregador
-  [entityId]: string
-}
-```

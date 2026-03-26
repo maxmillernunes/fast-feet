@@ -19,6 +19,12 @@ Sistema de gestão de encomendas onde:
 | **Recipient**   | Destinatário | ID único   |
 | **Deliveryman** | Entregador   | (futuro)   |
 
+## VALUE OBJECTS
+
+| Value Object    | Descrição                                                           | Local                                                |
+| --------------- | ------------------------------------------------------------------- | ---------------------------------------------------- |
+| **OrderStatus** | Status do pedido (CREATED, WAITING, PICKED_UP, DELIVERED, RETURNED) | `enterprise/entities/values-objects/order-status.ts` |
+
 ## CICLO DE VIDA DO PEDIDO
 
 ```
@@ -35,18 +41,17 @@ Sistema de gestão de encomendas onde:
                     ┌──────────────┐
                     │  PICKED_UP   │ ← Em rota
                     └──────┬───────┘
-                           │
-              ┌────────────┴────────────┐
-              │                         │
-              ▼                         ▼
-       ┌────────────┐           ┌────────────┐
-       │ DELIVERED  │           │  RETURNED  │ ← Não entregue
-       └────────────┘           └──────┬─────┘
-              (fim)                    │
-                                       ▼ (tenta novamente)
-                                ┌──────────────┐
-                                │   WAITING    │
-                                └──────────────┘
+          ┌────────────┴────────────┐
+          │                         │
+          ▼                         ▼
+   ┌────────────┐           ┌────────────┐
+   │ DELIVERED  │           │  RETURNED  │ ← Não entregue
+   └────────────┘           └──────┬─────┘
+          (fim)                    │
+                                   ▼ (tenta novamente)
+                            ┌──────────────┐
+                            │   WAITING    │
+                            └──────────────┘
 ```
 
 ## STATUS DO PEDIDO
@@ -71,34 +76,42 @@ Sistema de gestão de encomendas onde:
 | Ver pedidos próximos     | ✅    | ✅         |
 | Ver próprios pedidos     | ❌    | ✅         |
 
-## COMPORTAMENTOS DO PEDIDO
+## COMPORTAMENTOS PRINCIPAIS
 
-O pedido (Order) tem métodos que controlam seu ciclo:
+A entidade Order possui métodos que controlam seu ciclo de vida:
 
-```typescript
-order.markAsAwaiting() // CREATED → WAITING
-order.pickUp(driverId) // WAITING → PICKED_UP
-order.deliver(driverId) // PICKED_UP → DELIVERED
-order.return(driverId) // PICKED_UP → RETURNED
-```
+| Método              | Transição             | Descrição                 |
+| ------------------- | --------------------- | ------------------------- |
+| `markAsAwaiting()`  | CREATED → WAITING     | Admin marca para retirada |
+| `pickUp(driverId)`  | WAITING → PICKED_UP   | Entregador retira         |
+| `deliver(driverId)` | PICKED_UP → DELIVERED | Entregador entrega        |
+| `return(driverId)`  | PICKED_UP → RETURNED  | Não foi possível entregar |
 
 Cada método:
 
-- Valida se a transição é permitida
-- Valida se o entregador é o correto
-- Atualiza o status
-- Registra timestamps (pickedAt, deliveredAt)
+- Valida se a transição de status é permitida
+- Valida se o entregador é o correto (para deliver/return)
+- Atualiza o status e registra timestamps relevantes
 
 ## VALIDAÇÕES IMPORTANTES
 
 1. **Transição de status**
    - Cada status só pode transitar para status específicos
-   - Tentar transição inválida retorna erro
+   - Transição inválida retorna erro
 
 2. **Proprietário do pedido**
-   - Só o entregador que retirou pode entregar/devolver
-   - `deliveryDriveId` é definido no `pickUp()`
+   - Só o entregador que retirou pode entregar ou devolver
+   - Identificação do entregador é definida no momento do pickUp()
 
 3. **Edição de pedidos**
-   - Pedidos podem ser editados enquanto `CREATED` ou `WAITING`
-   - Após `PICKED_UP`, não pode mais editar
+   - Pedidos podem ser editados enquanto CREATED ou WAITING
+   - Após PICKED_UP, não pode mais editar
+
+---
+
+## DETALHES IMPLEMENTAÇÃO
+
+Para implementação, veja:
+
+- [enterprise/AGENT.md](./enterprise/AGENT.md) → Entities, VOs, Errors
+- [application/AGENT.md](./application/AGENT.md) → Use Cases, Repositories

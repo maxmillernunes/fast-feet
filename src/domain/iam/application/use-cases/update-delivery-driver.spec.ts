@@ -4,8 +4,8 @@ import { HashGeneratorInMemory } from '@test/cryptography/hash-generator-in-memo
 import { UpdateDeliveryDriverUseCase } from './update-delivery-driver'
 import { makeUser } from '@test/factories/make-user'
 import { UserRole } from '../../enterprise/entities/values-objects/user-role'
-import { UserNotFoundError } from '../../enterprise/errors/user-not-found-error'
-import { InvalidPasswordError } from '../../enterprise/errors/invalid-password-error'
+import { UserNotFoundError } from '../../enterprise/entities/errors/user-not-found-error'
+import { InvalidPasswordError } from '../../enterprise/entities/errors/invalid-password-error'
 import { NotAllowedError } from '@/core/errors/errors/not-allowed-error'
 import { faker } from '@faker-js/faker'
 
