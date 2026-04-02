@@ -1,5 +1,5 @@
 import { Either, left, right } from '@/core/either'
-import { InvalidPasswordError } from '../../errors/invalid-password-error'
+import { InvalidPasswordError } from '../errors/invalid-password-error'
 
 export class Password {
   private constructor(private readonly hash: string) {}
