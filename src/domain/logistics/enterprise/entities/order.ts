@@ -1,4 +1,3 @@
-import { Entity } from '@/core/entities/entity'
 import type { UniqueEntityId } from '@/core/entities/unique-entity-id'
 import { OrderStatus } from './values-objects/order-status'
 import type { Optional } from '@/core/types/optional'
@@ -8,6 +7,8 @@ import { OrderCanNotTransitionToReturnedError } from './errors/order-can-not-tra
 import { OrderCanNotTransitionToDeliveryError } from './errors/order-can-not-transition-to-delivery-error'
 import { OrderCanNotTransitionToPickUpError } from './errors/order-can-not-transition-to-pickup-error'
 import { OrderCanNotTransitionToWaitingError } from './errors/order-can-not-transition-to-waiting-error'
+import { AggregateRoot } from '@/core/entities/aggregate-root'
+import { OrderCreatedEvent } from '../events/order-created-event'
 
 export interface OrderProps {
   recipientId: UniqueEntityId
@@ -33,7 +34,7 @@ type PickUpOrder = Either<OrderCanNotTransitionToPickUpError, null>
 
 type AwaitingOrder = Either<OrderCanNotTransitionToWaitingError, null>
 
-export class Order extends Entity<OrderProps> {
+export class Order extends AggregateRoot<OrderProps> {
   get recipientId() {
     return this.props.recipientId
   }
@@ -153,6 +154,12 @@ export class Order extends Entity<OrderProps> {
       },
       id,
     )
+
+    const isNewOrder = !id
+
+    if (isNewOrder) {
+      order.addDomainEvent(new OrderCreatedEvent(order))
+    }
 
     return order
   }
