@@ -8,6 +8,7 @@ import type {
 } from '@/domain/logistics/application/repositories/orders-repository'
 import { GetDistanceBetweenCoordinates } from '@test/utils/get-distance-between-coordinates'
 import { InMemoryRecipientsRepository } from './in-memory-recipients-repository'
+import { DomainEvents } from '@/core/events/domain-events'
 
 export class InMemoryOrdersRepository implements OrdersRepository {
   public items: Order[] = []
@@ -123,10 +124,14 @@ export class InMemoryOrdersRepository implements OrdersRepository {
     const orderIndex = this.items.findIndex((item) => item.id.equals(order.id))
 
     this.items[orderIndex] = order
+
+    DomainEvents.dispatchEventsForAggregate(order.id)
   }
 
   async create(order: Order): Promise<void> {
     this.items.push(order)
+
+    DomainEvents.dispatchEventsForAggregate(order.id)
   }
 
   async delete(order: Order): Promise<void> {
