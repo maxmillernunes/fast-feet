@@ -34,7 +34,7 @@ export class DeleteOrderUseCase {
       return left(new ResourceNotFoundError())
     }
 
-    if (!order.status.isWaiting()) {
+    if (!order.status.isCreated()) {
       return left(new NotAllowedError())
     }
 

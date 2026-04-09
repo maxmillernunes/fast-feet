@@ -12,7 +12,7 @@ export function makeOrder(
   const order = Order.create(
     {
       recipientId: new UniqueEntityId(),
-      status: override.status ?? OrderStatus.create('WAITING'),
+      status: override.status ?? OrderStatus.create(),
       ...override,
     },
     id,

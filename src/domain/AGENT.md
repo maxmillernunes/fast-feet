@@ -16,10 +16,11 @@ src/domain/
 
 ## DOMÍNIOS EXISTENTES
 
-| Domínio       | Descrição               | Documentação                               |
-| ------------- | ----------------------- | ------------------------------------------ |
-| **iam**       | Autenticação e usuários | [iam/AGENT.md](./iam/AGENT.md)             |
-| **logistics** | Gestão de entregas      | [logistics/AGENT.md](./logistics/AGENT.md) |
+| Domínio          | Descrição               | Documentação                                     |
+| ---------------- | ----------------------- | ------------------------------------------------ |
+| **iam**          | Autenticação e usuários | [iam/AGENT.md](./iam/AGENT.md)                   |
+| **logistics**    | Gestão de entregas      | [logistics/AGENT.md](./logistics/AGENT.md)       |
+| **notification** | Notificações            | [notification/AGENT.md](./notification/AGENT.md) |
 
 ---
 
@@ -29,11 +30,14 @@ Para criar um novo domínio, siga a estrutura:
 
 ```
 src/domain/[nome]/
-├── AGENT.md                    # See Template: Domínio
+├── AGENT.md                    # Conceitos do domínio
 ├── enterprise/
-│   └── AGENT.md                # See Template: Enterprise
+│   ├── AGENT.md                # Entities, VOs, Errors
+│   └── events/                 # Domain Events (se aplicável)
+│       └── AGENT.md
 └── application/
-    └── AGENT.md                # See Template: Application
+    ├── AGENT.md                # Use Cases, Repositories
+    └── subscribers/             # Event Handlers (se aplicável)
 ```
 
 ---
