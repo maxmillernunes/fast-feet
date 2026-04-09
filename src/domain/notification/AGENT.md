@@ -85,3 +85,12 @@ Sistema de envio e gerenciamento de notificações para os usuários, baseado em
 3. **Domain Events**
    - Só envia notificação se entidade relacionada existe
    - Handlers verificam antes de chamar use case
+
+---
+
+## DETALHES IMPLEMENTAÇÃO
+
+Para implementação, veja:
+
+- [enterprise/AGENT.md](./enterprise/AGENT.md) → Entities, VOs, Errors
+- [application/AGENT.md](./application/AGENT.md) → Use Cases, Repositories, Subscribers
