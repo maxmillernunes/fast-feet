@@ -7,11 +7,6 @@ export class OrderMarkedAsAwaitingEvent implements DomainEvent {
   public order: Order
 
   constructor(order: Order) {
-    console.log(
-      'Creating OrderMarkedAsAwaitingEvent for Order ID:',
-      order.id.toString(),
-    )
-
     this.order = order
     this.occurredAt = new Date()
   }
