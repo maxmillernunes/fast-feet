@@ -40,9 +40,15 @@ export class OrderStatus {
   isWaiting() {
     return this.value === 'WAITING'
   }
+
+  isCreated() {
+    return this.value === 'CREATED'
+  }
+
   isPickedUp() {
     return this.value === 'PICKED_UP'
   }
+
   isDelivered() {
     return this.value === 'DELIVERED'
   }

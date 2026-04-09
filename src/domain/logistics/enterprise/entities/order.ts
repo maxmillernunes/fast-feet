@@ -9,6 +9,7 @@ import { OrderCanNotTransitionToPickUpError } from './errors/order-can-not-trans
 import { OrderCanNotTransitionToWaitingError } from './errors/order-can-not-transition-to-waiting-error'
 import { AggregateRoot } from '@/core/entities/aggregate-root'
 import { OrderCreatedEvent } from '../events/order-created-event'
+import { OrderMarkedAsAwaitingEvent } from '../events/order-marked-as-awaiting-events'
 
 export interface OrderProps {
   recipientId: UniqueEntityId
@@ -72,7 +73,7 @@ export class Order extends AggregateRoot<OrderProps> {
    * @param driveId - UniqueEntityId of the delivery driver
    * @return void
    */
-  public pickUp(driveId: UniqueEntityId): PickUpOrder {
+  pickUp(driveId: UniqueEntityId): PickUpOrder {
     if (!this.props.status.canTransitionTo('PICKED_UP')) {
       return left(new OrderCanNotTransitionToPickUpError())
     }
@@ -83,10 +84,13 @@ export class Order extends AggregateRoot<OrderProps> {
 
     this.touch()
 
+    // Emit domain event
+    this.addDomainEvent(new OrderMarkedAsAwaitingEvent(this))
+
     return right(null)
   }
 
-  public deliver(driverId: UniqueEntityId): DeliveryOrder {
+  deliver(driverId: UniqueEntityId): DeliveryOrder {
     if (
       this.props.deliveryDriveId &&
       !this.props.deliveryDriveId.equals(driverId)
@@ -103,10 +107,13 @@ export class Order extends AggregateRoot<OrderProps> {
 
     this.touch()
 
+    // Emit domain event
+    this.addDomainEvent(new OrderMarkedAsAwaitingEvent(this))
+
     return right(null)
   }
 
-  public return(driverId: UniqueEntityId): ReturnedOrder {
+  return(driverId: UniqueEntityId): ReturnedOrder {
     if (
       this.props.deliveryDriveId &&
       !this.props.deliveryDriveId.equals(driverId)
@@ -119,19 +126,24 @@ export class Order extends AggregateRoot<OrderProps> {
     }
 
     this.props.status = OrderStatus.create('RETURNED')
-
     this.touch()
+
+    // Emit domain event
+    this.addDomainEvent(new OrderMarkedAsAwaitingEvent(this))
 
     return right(null)
   }
 
-  public markAsAwaiting(): AwaitingOrder {
+  markAsAwaiting(): AwaitingOrder {
     if (!this.props.status.canTransitionTo('WAITING')) {
       return left(new OrderCanNotTransitionToWaitingError())
     }
 
     this.props.status = OrderStatus.create('WAITING')
     this.touch()
+
+    // Emit domain event
+    this.addDomainEvent(new OrderMarkedAsAwaitingEvent(this))
 
     return right(null)
   }
