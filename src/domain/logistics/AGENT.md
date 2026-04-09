@@ -114,4 +114,5 @@ Cada método:
 Para implementação, veja:
 
 - [enterprise/AGENT.md](./enterprise/AGENT.md) → Entities, VOs, Errors
+- [enterprise/events/AGENT.md](./enterprise/events/AGENT.md) → Domain Events
 - [application/AGENT.md](./application/AGENT.md) → Use Cases, Repositories

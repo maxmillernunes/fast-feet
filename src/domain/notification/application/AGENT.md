@@ -2,6 +2,11 @@
 
 Use Cases, Subscribers e Repositories deste domínio.
 
+**Dependências:**
+
+- [Core Events](../core/events/AGENT.md) - Domain Events
+- [Enterprise](./enterprise/AGENT.md) - Entity Notification
+
 ---
 
 ## COMO CRIAR USE CASE
@@ -12,38 +17,32 @@ Use Cases orquestram operações de negócio.
 
 ```typescript
 import { right, type Either } from '@/core/either'
-import { Notification } from '../../enterprise/entities/notification'
-import { NotificationsRepository } from '../repositories/notifications-repository'
+import { [Entity] } from '../../enterprise/entities/[entity]'
+import { [Repository] } from '../repositories/[repository]'
 import { UniqueEntityId } from '@/core/entities/unique-entity-id'
 
-export interface SendNotificationRequest {
-  recipientId: string
-  title: string
-  content: string
+export interface [Action][Entity]Request {
+  [field]: string
 }
 
-export type SendNotificationResponse = Either<
+export type [Action][Entity]Response = Either<
   null,
-  { notification: Notification }
+  { [entity]: [Entity] }
 >
 
-export class SendNotificationUseCase {
-  constructor(private notificationsRepository: NotificationsRepository) {}
+export class [Action][Entity]UseCase {
+  constructor(private [repository]: [Repository]) {}
 
   async execute({
-    content,
-    recipientId,
-    title,
-  }: SendNotificationRequest): Promise<SendNotificationResponse> {
-    const notification = Notification.create({
-      recipientId: new UniqueEntityId(recipientId),
-      title,
-      content,
+    [field],
+  }: [Action][Entity]Request): Promise<[Action][Entity]Response> {
+    const [entity] = [Entity].create({
+      [field]: // ...
     })
 
-    await this.notificationsRepository.create(notification)
+    await this.[repository].create([entity])
 
-    return right({ notification })
+    return right({ [entity] })
   }
 }
 ```
@@ -64,72 +63,36 @@ export class SendNotificationUseCase {
 ### Interface
 
 ```typescript
-import type { Notification } from '../entities/notification'
+import type { [Entity] } from '../entities/[entity]'
 
-export abstract class NotificationsRepository {
-  abstract findById(id: string): Promise<Notification | null>
-  abstract create(notification: Notification): Promise<void>
-  abstract save(notification: Notification): Promise<void>
+export abstract class [Repository] {
+  abstract findById(id: string): Promise<[Entity] | null>
+  abstract create([entity]: [Entity]): Promise<void>
+  abstract save([entity]: [Entity]): Promise<void>
 }
 ```
 
 ### Implementação In-Memory (para testes)
 
 ```typescript
-import { NotificationsRepository } from '../repositories/notifications-repository'
-import { Notification } from '../entities/notification'
+import { [Repository] } from '../repositories/[repository]'
+import { [Entity] } from '../entities/[entity]'
 
-export class InMemoryNotificationsRepository implements NotificationsRepository {
-  public items: Notification[] = []
+export class InMemory[Repository] implements [Repository] {
+  public items: [Entity][] = []
 
-  async findById(id: string): Promise<Notification | null> {
+  async findById(id: string): Promise<[Entity] | null> {
     return this.items.find((item) => item.id.toString() === id) ?? null
   }
 
-  async create(notification: Notification): Promise<void> {
-    this.items.push(notification)
+  async create([entity]: [Entity]): Promise<void> {
+    this.items.push([entity])
   }
 
-  async save(notification: Notification): Promise<void> {
-    const index = this.items.findIndex((item) =>
-      item.id.equals(notification.id),
-    )
-    this.items[index] = notification
+  async save([entity]: [Entity]): Promise<void> {
+    const index = this.items.findIndex((item) => item.id.equals([entity].id))
+    this.items[index] = [entity]
   }
-}
-```
-
----
-
-## COMO CRIAR FACTORY
-
-```typescript
-import { Notification } from '@/domain/notification/enterprise/entities/notification'
-import { UniqueEntityId } from '@/core/entities/unique-entity-id'
-import type { Optional } from '@/core/types/optional'
-import { faker } from '@faker-js/faker'
-
-export interface MakeNotificationProps {
-  recipientId?: UniqueEntityId
-  title?: string
-  content?: string
-}
-
-export function makeNotification(
-  props: Optional<MakeNotificationProps, 'recipientId'> = {},
-  id?: UniqueEntityId,
-) {
-  const notification = Notification.create(
-    {
-      recipientId: props.recipientId ?? new UniqueEntityId(faker.string.uuid()),
-      title: props.title ?? faker.lorem.sentence(),
-      content: props.content ?? faker.lorem.paragraph(),
-      createdAt: new Date(),
-    },
-    id,
-  )
-
-  return notification
 }
 ```
 
@@ -144,34 +107,32 @@ Subscribers são handlers de domain events que processam eventos de outros domí
 ```typescript
 import { DomainEvents } from '@/core/events/domain-events'
 import type { EventHandler } from '@/core/events/event-handler'
-import { [Entity]CreatedEvent } from '@/domain/[source-domain]/enterprise/events/[entity]-created-event'
-import { SendNotificationUseCase } from '../use-cases/send-notification'
+import { [Entity]Event } from '@/domain/[source]/enterprise/events/[entity]-event'
+import { [Action][Entity]UseCase } from '../use-cases/[action]-[entity]'
 
-export class On[Entity]Created implements EventHandler {
+export class On[Entity][Event] implements EventHandler {
   constructor(
     private [source]Repository: [Source]Repository,
-    private sendNotificationUseCase: SendNotificationUseCase,
+    private [action][Entity]UseCase: [Action][Entity]UseCase,
   ) {
     this.setupSubscriptions()
   }
 
   setupSubscriptions(): void {
     DomainEvents.register(
-      this.[handlerMethod].bind(this),
-      [Entity]CreatedEvent.name,
+      this.[handler].bind(this),
+      [Entity]Event.name,
     )
   }
 
-  private async [handlerMethod]({ [entity] }: [Entity]CreatedEvent) {
+  private async [handler]({ [entity] }: [Entity]Event) {
     const [source] = await this.[source]Repository.findById(
-      [entity].[sourceField].toString(),
+      [entity].[field].toString(),
     )
 
     if ([source]) {
-      await this.sendNotificationUseCase.execute({
-        recipientId: [source].id.toString(),
-        title: '[Title]',
-        content: `[Content]`,
+      await this.[action][Entity]UseCase.execute({
+        // ...
       })
     }
   }
@@ -192,7 +153,6 @@ export class On[Entity]Created implements EventHandler {
    - `private async` com nome descritivo
    - Recebe o evento como parâmetro
    - Verifica condições antes de chamar use case
-   - Chama use case para processar ação
 
 ### Onde criar subscribers
 
@@ -206,7 +166,74 @@ application/
 
 ### Referência
 
-Para exemplo completo, veja: [Subscribers Implementados](./subscribers/)
+Para implementação real, veja: [Subscribers](./subscribers/)
+
+---
+
+## PADRÃO DE TESTE
+
+### Use Case
+
+```typescript
+import { InMemory[Repository] } from '@test/repositories/in-memory-[repository]'
+import { [Action][Entity]UseCase } from './[action]-[entity]'
+import { make[Entity] } from '@test/factories/make-[entity]'
+
+let [repository]: InMemory[Repository]
+let sut: [Action][Entity]UseCase
+
+describe('[Action] [Entity]', () => {
+  beforeEach(() => {
+    [repository] = new InMemory[Repository]()
+    sut = new [Action][Entity]UseCase([repository])
+  })
+
+  it('should [action] [entity]', async () => {
+    const result = await sut.execute({
+      [field]: 'value',
+    })
+
+    expect(result.isRight()).toBe(true)
+    if (result.isRight()) {
+      expect([repository].items).toHaveLength(1)
+    }
+  })
+})
+```
+
+### Subscriber
+
+```typescript
+import { InMemory[Repository] } from '@test/repositories/in-memory-[repository]'
+import { InMemory[Source]Repository } from '@test/repositories/in-memory-[source]-repository'
+import { [Action][Entity]UseCase } from '../use-cases/[action]-[entity]'
+import { On[Entity][Event] } from './on-[entity]-[event]'
+import { make[Entity] } from '@test/factories/make-[entity]'
+import { [Entity]Event } from '@/domain/[source]/enterprise/events/[entity]-event'
+
+let [repository]: InMemory[Repository]
+let [source]Repository: InMemory[Source]Repository
+let [action][Entity]UseCase: [Action][Entity]UseCase
+let sut: On[Entity][Event]
+
+describe('On[Entity][Event]', () => {
+  beforeEach(() => {
+    [repository] = new InMemory[Repository]()
+    [source]Repository = new InMemory[Source]Repository()
+    [action][Entity]UseCase = new [Action][Entity]UseCase([repository])
+    sut = new On[Entity][Event]([source]Repository, [action][Entity]UseCase)
+  })
+
+  it('should [action] when [event] occurs', async () => {
+    const [entity] = make[Entity]()
+    const event = new [Entity]Event([entity])
+
+    await sut.[handler](event)
+
+    expect([repository].items).toHaveLength(1)
+  })
+})
+```
 
 ---
 
@@ -216,12 +243,12 @@ Para exemplo completo, veja: [Subscribers Implementados](./subscribers/)
 
 ```typescript
 // ✅ Correto
-private async [handlerMethod](event: [Entity]CreatedEvent) {
+private async [handler](event: [Entity]Event) {
   // handler logic
 }
 
 // ❌ Incorreto
-public async [handlerMethod](event: [Entity]CreatedEvent) {
+public async [handler](event: [Entity]Event) {
   // handler logic
 }
 ```
@@ -230,20 +257,14 @@ public async [handlerMethod](event: [Entity]CreatedEvent) {
 
 ```typescript
 // ✅ Correto
-private async [handlerMethod]({ [entity] }: [Entity]CreatedEvent) {
+private async [handler]({ [entity] }: [Entity]Event) {
   const [source] = await this.[source]Repository.findById(
-    [entity].[sourceField].toString(),
+    [entity].[field].toString(),
   )
 
   if ([source]) {
-    await this.sendNotificationUseCase.execute({ ... })
+    await this.[useCase].execute({ ... })
   }
-}
-
-// ❌ Incorreto
-private async [handlerMethod]({ [entity] }: [Entity]CreatedEvent) {
-  await this.sendNotificationUseCase.execute({ ... })
-  // use case vai falhar se [source] não existe
 }
 ```
 
@@ -251,34 +272,25 @@ private async [handlerMethod]({ [entity] }: [Entity]CreatedEvent) {
 
 ```typescript
 // ✅ Correto
-export type [Action]Response = Either<null, { notification: Notification }>
+export type [Action]Response = Either<null, { [entity]: [Entity] }>
 
 // ❌ Incorreto
-export type [Action]Response = Either<Error, { notification: Notification }>
+export type [Action]Response = Either<Error, { [entity]: [Entity] }>
 ```
 
-### 4. Domain Events guardam só o necessário
-
-```typescript
-// ✅ Correto
-export class [Entity]CreatedEvent implements DomainEvent {
-  public occurredAt: Date
-  public [entity]: [Entity]
-  // só o necessário para a lógica de notification
-}
-
-// ❌ Incorreto
-export class [Entity]CreatedEvent implements DomainEvent {
-  public occurredAt: Date
-  public [entity]: [Entity]
-  public [related]: [RelatedEntity] // dados duplicados
-}
-```
-
-### 5. Subscribers são instanciados no bootstrap
+### 4. Subscribers são instanciados no bootstrap
 
 ```typescript
 // Exemplo de instanciação no bootstrap
 container.resolve(On[Entity]Created)
 container.resolve(On[Entity]Updated)
+```
+
+### 5. Limpar handlers entre testes
+
+```typescript
+afterEach(() => {
+  DomainEvents.clearHandlers()
+  DomainEvents.clearMarkedAggregates()
+})
 ```
