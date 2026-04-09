@@ -1,0 +1,22 @@
+import type { UniqueEntityId } from '@/core/entities/unique-entity-id'
+import type { DomainEvent } from '@/core/events/domain-event'
+import type { Order } from '../entities/order'
+
+export class OrderMarkedAsAwaitingEvent implements DomainEvent {
+  public occurredAt: Date
+  public order: Order
+
+  constructor(order: Order) {
+    console.log(
+      'Creating OrderMarkedAsAwaitingEvent for Order ID:',
+      order.id.toString(),
+    )
+
+    this.order = order
+    this.occurredAt = new Date()
+  }
+
+  getAggregateId(): UniqueEntityId {
+    return this.order.id
+  }
+}
