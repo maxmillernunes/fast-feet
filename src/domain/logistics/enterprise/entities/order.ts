@@ -9,7 +9,9 @@ import { OrderCanNotTransitionToPickUpError } from './errors/order-can-not-trans
 import { OrderCanNotTransitionToWaitingError } from './errors/order-can-not-transition-to-waiting-error'
 import { AggregateRoot } from '@/core/entities/aggregate-root'
 import { OrderCreatedEvent } from '../events/order-created-event'
+import { OrderDeliveredEvent } from '../events/order-delivered-event'
 import { OrderMarkedAsAwaitingEvent } from '../events/order-marked-as-awaiting-events'
+import { OrderPickedUpEvent } from '../events/order-picked-up-event'
 
 export interface OrderProps {
   recipientId: UniqueEntityId
@@ -85,7 +87,7 @@ export class Order extends AggregateRoot<OrderProps> {
     this.touch()
 
     // Emit domain event
-    this.addDomainEvent(new OrderMarkedAsAwaitingEvent(this))
+    this.addDomainEvent(new OrderPickedUpEvent(this))
 
     return right(null)
   }
@@ -108,7 +110,7 @@ export class Order extends AggregateRoot<OrderProps> {
     this.touch()
 
     // Emit domain event
-    this.addDomainEvent(new OrderMarkedAsAwaitingEvent(this))
+    this.addDomainEvent(new OrderDeliveredEvent(this))
 
     return right(null)
   }
