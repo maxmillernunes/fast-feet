@@ -25,7 +25,6 @@ describe('Mark Order As Awaiting', () => {
 
     const result = await sut.execute({
       orderId: order.id.toString(),
-      adminId: 'admin-1',
     })
 
     expect(result.isRight()).toBe(true)
@@ -43,7 +42,6 @@ describe('Mark Order As Awaiting', () => {
   it('should not be able to mark an order as awaiting when the order does not exist', async () => {
     const result = await sut.execute({
       orderId: 'non-existing-order-id',
-      adminId: 'admin-1',
     })
 
     expect(result.isLeft()).toBe(true)
@@ -58,7 +56,6 @@ describe('Mark Order As Awaiting', () => {
 
     const result = await sut.execute({
       orderId: order.id.toString(),
-      adminId: 'admin-1',
     })
 
     expect(result.isLeft()).toBe(true)
@@ -73,7 +70,6 @@ describe('Mark Order As Awaiting', () => {
 
     const result = await sut.execute({
       orderId: order.id.toString(),
-      adminId: 'admin-1',
     })
 
     expect(result.isLeft()).toBe(true)
@@ -88,7 +84,6 @@ describe('Mark Order As Awaiting', () => {
 
     const result = await sut.execute({
       orderId: order.id.toString(),
-      adminId: 'admin-1',
     })
 
     expect(result.isLeft()).toBe(true)

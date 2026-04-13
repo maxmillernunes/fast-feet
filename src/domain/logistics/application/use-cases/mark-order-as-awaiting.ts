@@ -6,7 +6,6 @@ import type { OrderCanNotTransitionToWaitingError } from '@/domain/logistics/ent
 
 interface MarkOrderAsAwaitingUseCaseRequest {
   orderId: string
-  adminId: string
 }
 
 type MarkOrderAsAwaitingUseCaseResponse = Either<

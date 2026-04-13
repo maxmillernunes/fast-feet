@@ -5,7 +5,6 @@ import type { OrdersRepository } from '../repositories/orders-repository'
 
 interface GetOrderDetailsByIdUseCaseRequest {
   orderId: string
-  // deliverymanId?: string // TO-DO: When implementing deliveryman role, use to restrict access
 }
 
 type GetOrderDetailsByIdUseCaseResponse = Either<

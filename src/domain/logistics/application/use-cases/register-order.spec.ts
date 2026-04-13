@@ -21,7 +21,6 @@ describe('Register Order', () => {
     await recipientsRepository.create(recipient)
 
     const result = await sut.execute({
-      adminId: 'admin-1',
       recipientId: recipient.id.toString(),
     })
 
@@ -40,7 +39,6 @@ describe('Register Order', () => {
 
   it('should not be able to register an order when recipient does not exists', async () => {
     const result = await sut.execute({
-      adminId: 'admin-1',
       recipientId: 'non-existing-recipient-id',
     })
 

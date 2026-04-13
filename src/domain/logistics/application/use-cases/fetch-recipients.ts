@@ -5,7 +5,6 @@ import type { RecipientsRepository } from '../repositories/recipients-repository
 interface FetchRecipientsUseCaseRequest {
   page?: number
   perPage?: number
-  // adminId?: string // TO-DO: When implementing ADMIN role, use this to check permission
 }
 
 type FetchRecipientsUseCaseResponse = Either<
@@ -21,14 +20,7 @@ export class FetchRecipientsUseCase {
   async execute({
     page = 1,
     perPage = 10,
-    // adminId,
   }: FetchRecipientsUseCaseRequest): Promise<FetchRecipientsUseCaseResponse> {
-    // TO-DO: When implementing ADMIN role, uncomment and validate:
-    // const isAdmin = adminId ? true : false // Replace with real role check
-    // if (!isAdmin) {
-    //   return left(new NotAllowedError())
-    // }
-
     const recipients = await this.recipientsRepository.findMany({
       page,
       perPage,

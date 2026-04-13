@@ -27,7 +27,6 @@ describe('Edit Order Use Case', () => {
     await recipientsRepository.create(recipient)
 
     const result = await sut.execute({
-      adminId: 'admin-1',
       orderId: order.id.toString(),
       recipientId: recipient.id.toString(),
     })
@@ -42,7 +41,6 @@ describe('Edit Order Use Case', () => {
 
   it('should not be able to edit a non-existing order', async () => {
     const result = await sut.execute({
-      adminId: 'admin-1',
       orderId: 'non-existing-order-id',
       recipientId: 'recipient-1',
     })
@@ -56,7 +54,6 @@ describe('Edit Order Use Case', () => {
     await ordersRepository.create(order)
 
     const result = await sut.execute({
-      adminId: 'admin-1',
       orderId: order.id.toString(),
       recipientId: 'non-existing-recipient-id',
     })
@@ -75,24 +72,6 @@ describe('Edit Order Use Case', () => {
     await recipientsRepository.create(recipient)
 
     const result = await sut.execute({
-      adminId: 'admin-1',
-      orderId: order.id.toString(),
-      recipientId: recipient.id.toString(),
-    })
-
-    expect(result.isLeft()).toBe(true)
-    expect(result.value).toBeInstanceOf(NotAllowedError)
-  })
-
-  it('should not be able to edit an order if admin does not have permission', async () => {
-    const order = makeOrder()
-    await ordersRepository.create(order)
-
-    const recipient = makeRecipient()
-    await recipientsRepository.create(recipient)
-
-    const result = await sut.execute({
-      adminId: '', // Invalid adminId to simulate lack of permission
       orderId: order.id.toString(),
       recipientId: recipient.id.toString(),
     })
