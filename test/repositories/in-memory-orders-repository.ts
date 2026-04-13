@@ -15,6 +15,19 @@ export class InMemoryOrdersRepository implements OrdersRepository {
 
   constructor(private recipientsRepository: InMemoryRecipientsRepository) {}
 
+  async findOrdersByRecipientId(
+    recipientId: string,
+    { page, perPage }: PaginationParams,
+  ): Promise<Order[]> {
+    const start = (page - 1) * perPage
+    const end = page * perPage
+
+    return this.items
+      .filter((order) => order.recipientId.toString() === recipientId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      .slice(start, end)
+  }
+
   async findManyRecent({ page, perPage }: PaginationParams): Promise<Order[]> {
     const start = (page - 1) * perPage
     const end = page * perPage

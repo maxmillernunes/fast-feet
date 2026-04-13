@@ -18,6 +18,10 @@ export abstract class OrdersRepository {
     status: StatusOptions[],
     params: PaginationParams,
   ): Promise<Order[]>
+  abstract findOrdersByRecipientId(
+    recipientId: string,
+    params: PaginationParams,
+  ): Promise<Order[]>
   abstract create(order: Order): Promise<void>
   abstract save(order: Order): Promise<void>
   abstract delete(order: Order): Promise<void>
