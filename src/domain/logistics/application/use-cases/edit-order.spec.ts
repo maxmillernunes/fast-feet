@@ -6,25 +6,39 @@ import { EditOrderUseCase } from './edit-order'
 import { ResourceNotFoundError } from '@/core/errors/errors/resource-not-found-error'
 import { NotAllowedError } from '@/core/errors/errors/not-allowed-error'
 import { OrderStatus } from '../../enterprise/entities/values-objects/order-status'
+import { InMemoryOrderAttachmentsRepository } from '@test/repositories/in-memory-order-attachments-repository'
+import { InMemoryAttachmentsRepository } from '@test/repositories/in-memory-attachments-repository'
 
-let ordersRepository: InMemoryOrdersRepository
-let recipientsRepository: InMemoryRecipientsRepository
+let inMemoryOrderAttachmentsRepository: InMemoryOrderAttachmentsRepository
+let inMemoryAttachmentsRepository: InMemoryAttachmentsRepository
+let inMemoryOrdersRepository: InMemoryOrdersRepository
+let inMemoryRecipientsRepository: InMemoryRecipientsRepository
 let sut: EditOrderUseCase
 
 describe('Edit Order Use Case', () => {
   beforeEach(() => {
-    recipientsRepository = new InMemoryRecipientsRepository()
-    ordersRepository = new InMemoryOrdersRepository(recipientsRepository)
-    sut = new EditOrderUseCase(ordersRepository, recipientsRepository)
+    inMemoryOrderAttachmentsRepository =
+      new InMemoryOrderAttachmentsRepository()
+    inMemoryAttachmentsRepository = new InMemoryAttachmentsRepository()
+    inMemoryRecipientsRepository = new InMemoryRecipientsRepository()
+    inMemoryOrdersRepository = new InMemoryOrdersRepository(
+      inMemoryOrderAttachmentsRepository,
+      inMemoryAttachmentsRepository,
+      inMemoryRecipientsRepository,
+    )
+    sut = new EditOrderUseCase(
+      inMemoryOrdersRepository,
+      inMemoryRecipientsRepository,
+    )
   })
 
   it('should be able to edit an order', async () => {
     const order = makeOrder()
-    await ordersRepository.create(order)
+    await inMemoryOrdersRepository.create(order)
 
     const recipient = makeRecipient()
 
-    await recipientsRepository.create(recipient)
+    await inMemoryRecipientsRepository.create(recipient)
 
     const result = await sut.execute({
       orderId: order.id.toString(),
@@ -51,7 +65,7 @@ describe('Edit Order Use Case', () => {
 
   it('should not be able to edit an order with non-existing recipient', async () => {
     const order = makeOrder()
-    await ordersRepository.create(order)
+    await inMemoryOrdersRepository.create(order)
 
     const result = await sut.execute({
       orderId: order.id.toString(),
@@ -66,10 +80,10 @@ describe('Edit Order Use Case', () => {
     const order = makeOrder({
       status: OrderStatus.create('DELIVERED'),
     })
-    await ordersRepository.create(order)
+    await inMemoryOrdersRepository.create(order)
 
     const recipient = makeRecipient()
-    await recipientsRepository.create(recipient)
+    await inMemoryRecipientsRepository.create(recipient)
 
     const result = await sut.execute({
       orderId: order.id.toString(),

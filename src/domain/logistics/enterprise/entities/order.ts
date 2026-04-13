@@ -12,11 +12,13 @@ import { OrderCreatedEvent } from '../events/order-created-event'
 import { OrderDeliveredEvent } from '../events/order-delivered-event'
 import { OrderMarkedAsAwaitingEvent } from '../events/order-marked-as-awaiting-events'
 import { OrderPickedUpEvent } from '../events/order-picked-up-event'
+import type { OrderAttachment } from './order-attachment'
 
 export interface OrderProps {
   recipientId: UniqueEntityId
   deliveryDriveId?: UniqueEntityId
   status: OrderStatus
+  attachments?: OrderAttachment[]
   createdAt: Date
   updatedAt?: Date
   pickedAt?: Date
@@ -48,6 +50,10 @@ export class Order extends AggregateRoot<OrderProps> {
 
   get status() {
     return this.props.status
+  }
+
+  get attachments() {
+    return this.props.attachments
   }
 
   get createdAt() {
@@ -92,7 +98,10 @@ export class Order extends AggregateRoot<OrderProps> {
     return right(null)
   }
 
-  deliver(driverId: UniqueEntityId): DeliveryOrder {
+  deliver(
+    driverId: UniqueEntityId,
+    attachments: OrderAttachment[],
+  ): DeliveryOrder {
     if (
       this.props.deliveryDriveId &&
       !this.props.deliveryDriveId.equals(driverId)
@@ -105,6 +114,7 @@ export class Order extends AggregateRoot<OrderProps> {
     }
 
     this.props.status = OrderStatus.create('DELIVERED')
+    this.props.attachments = attachments
     this.props.deliveredAt = new Date()
 
     this.touch()

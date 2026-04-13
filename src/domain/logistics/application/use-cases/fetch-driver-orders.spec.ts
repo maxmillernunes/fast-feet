@@ -4,16 +4,27 @@ import { InMemoryRecipientsRepository } from '@test/repositories/in-memory-recip
 import { makeOrder } from '@test/factories/make-order'
 import { OrderStatus } from '@/domain/logistics/enterprise/entities/values-objects/order-status'
 import { UniqueEntityId } from '@/core/entities/unique-entity-id'
+import { InMemoryOrderAttachmentsRepository } from '@test/repositories/in-memory-order-attachments-repository'
+import { InMemoryAttachmentsRepository } from '@test/repositories/in-memory-attachments-repository'
 
-let ordersRepository: InMemoryOrdersRepository
-let recipientsRepository: InMemoryRecipientsRepository
+let inMemoryOrdersRepository: InMemoryOrdersRepository
+let inMemoryRecipientsRepository: InMemoryRecipientsRepository
+let inMemoryAttachmentsRepository: InMemoryAttachmentsRepository
+let inMemoryOrderAttachmentsRepository: InMemoryOrderAttachmentsRepository
 let sut: FetchDriverOrdersUseCase
 
 describe('Fetch Driver Orders', () => {
   beforeEach(() => {
-    recipientsRepository = new InMemoryRecipientsRepository()
-    ordersRepository = new InMemoryOrdersRepository(recipientsRepository)
-    sut = new FetchDriverOrdersUseCase(ordersRepository)
+    inMemoryOrderAttachmentsRepository =
+      new InMemoryOrderAttachmentsRepository()
+    inMemoryAttachmentsRepository = new InMemoryAttachmentsRepository()
+    inMemoryRecipientsRepository = new InMemoryRecipientsRepository()
+    inMemoryOrdersRepository = new InMemoryOrdersRepository(
+      inMemoryOrderAttachmentsRepository,
+      inMemoryAttachmentsRepository,
+      inMemoryRecipientsRepository,
+    )
+    sut = new FetchDriverOrdersUseCase(inMemoryOrdersRepository)
   })
 
   it('should return orders filtered by single status', async () => {
@@ -21,7 +32,7 @@ describe('Fetch Driver Orders', () => {
       deliveryDriveId: new UniqueEntityId('driver-1'),
       status: OrderStatus.create('PICKED_UP'),
     })
-    await ordersRepository.create(order)
+    await inMemoryOrdersRepository.create(order)
 
     const result = await sut.execute({
       driverId: 'driver-1',
@@ -44,8 +55,8 @@ describe('Fetch Driver Orders', () => {
       deliveryDriveId: new UniqueEntityId('driver-1'),
       status: OrderStatus.create('DELIVERED'),
     })
-    await ordersRepository.create(order1)
-    await ordersRepository.create(order2)
+    await inMemoryOrdersRepository.create(order1)
+    await inMemoryOrdersRepository.create(order2)
 
     const result = await sut.execute({
       driverId: 'driver-1',
@@ -78,8 +89,8 @@ describe('Fetch Driver Orders', () => {
 
     order2.deliver(new UniqueEntityId('driver-1'))
 
-    await ordersRepository.create(order1)
-    await ordersRepository.create(order2)
+    await inMemoryOrdersRepository.create(order1)
+    await inMemoryOrdersRepository.create(order2)
 
     const result = await sut.execute({
       driverId: 'driver-1',
@@ -109,7 +120,7 @@ describe('Fetch Driver Orders', () => {
       deliveryDriveId: new UniqueEntityId('driver-2'),
       status: OrderStatus.create('PICKED_UP'),
     })
-    await ordersRepository.create(order)
+    await inMemoryOrdersRepository.create(order)
 
     const result = await sut.execute({
       driverId: 'driver-1',
@@ -128,7 +139,7 @@ describe('Fetch Driver Orders', () => {
         deliveryDriveId: new UniqueEntityId('driver-1'),
         status: OrderStatus.create('PICKED_UP'),
       })
-      await ordersRepository.create(order)
+      await inMemoryOrdersRepository.create(order)
     }
 
     const result = await sut.execute({

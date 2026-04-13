@@ -7,16 +7,27 @@ import { ReturnOrderUseCase } from './return-order'
 import { OrderCanNotTransitionToReturnedError } from '@/domain/logistics/enterprise/entities/errors/order-can-not-transition-to-returned-error'
 import { InMemoryRecipientsRepository } from '@test/repositories/in-memory-recipients-repository'
 import { UniqueEntityId } from '@/core/entities/unique-entity-id'
+import { InMemoryOrderAttachmentsRepository } from '@test/repositories/in-memory-order-attachments-repository'
+import { InMemoryAttachmentsRepository } from '@test/repositories/in-memory-attachments-repository'
 
-let ordersRepository: InMemoryOrdersRepository
-let recipientsRepository: InMemoryRecipientsRepository
+let inMemoryOrdersRepository: InMemoryOrdersRepository
+let inMemoryRecipientsRepository: InMemoryRecipientsRepository
+let inMemoryAttachmentsRepository: InMemoryAttachmentsRepository
+let inMemoryOrderAttachmentsRepository: InMemoryOrderAttachmentsRepository
 let sut: ReturnOrderUseCase
 
 describe('Return Order', () => {
   beforeEach(() => {
-    recipientsRepository = new InMemoryRecipientsRepository()
-    ordersRepository = new InMemoryOrdersRepository(recipientsRepository)
-    sut = new ReturnOrderUseCase(ordersRepository)
+    inMemoryOrderAttachmentsRepository =
+      new InMemoryOrderAttachmentsRepository()
+    inMemoryAttachmentsRepository = new InMemoryAttachmentsRepository()
+    inMemoryRecipientsRepository = new InMemoryRecipientsRepository()
+    inMemoryOrdersRepository = new InMemoryOrdersRepository(
+      inMemoryOrderAttachmentsRepository,
+      inMemoryAttachmentsRepository,
+      inMemoryRecipientsRepository,
+    )
+    sut = new ReturnOrderUseCase(inMemoryOrdersRepository)
   })
 
   it('should be able to return an order', async () => {
@@ -24,7 +35,7 @@ describe('Return Order', () => {
       deliveryDriveId: new UniqueEntityId('driver-1'),
       status: OrderStatus.create('PICKED_UP'),
     })
-    await ordersRepository.create(order)
+    await inMemoryOrdersRepository.create(order)
 
     const result = await sut.execute({
       deliveryDriveId: 'driver-1',
@@ -58,7 +69,7 @@ describe('Return Order', () => {
       deliveryDriveId: new UniqueEntityId('driver-1'),
       status: OrderStatus.create('WAITING'),
     })
-    await ordersRepository.create(order)
+    await inMemoryOrdersRepository.create(order)
 
     const result = await sut.execute({
       deliveryDriveId: 'driver-1',
@@ -74,7 +85,7 @@ describe('Return Order', () => {
       deliveryDriveId: new UniqueEntityId('driver-1'),
       status: OrderStatus.create('PICKED_UP'),
     })
-    await ordersRepository.create(order)
+    await inMemoryOrdersRepository.create(order)
 
     const result = await sut.execute({
       deliveryDriveId: 'driver-2',

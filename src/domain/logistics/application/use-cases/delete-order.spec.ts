@@ -5,15 +5,26 @@ import { NotAllowedError } from '@/core/errors/errors/not-allowed-error'
 import { OrderStatus } from '../../enterprise/entities/values-objects/order-status'
 import { DeleteOrderUseCase } from './delete-order'
 import { InMemoryRecipientsRepository } from '@test/repositories/in-memory-recipients-repository'
+import { InMemoryOrderAttachmentsRepository } from '@test/repositories/in-memory-order-attachments-repository'
+import { InMemoryAttachmentsRepository } from '@test/repositories/in-memory-attachments-repository'
 
+let inMemoryOrderAttachmentsRepository: InMemoryOrderAttachmentsRepository
+let inMemoryAttachmentsRepository: InMemoryAttachmentsRepository
 let ordersRepository: InMemoryOrdersRepository
 let recipientRepository: InMemoryRecipientsRepository
 let sut: DeleteOrderUseCase
 
 describe('Delete Order Use Case', () => {
   beforeEach(() => {
+    inMemoryOrderAttachmentsRepository =
+      new InMemoryOrderAttachmentsRepository()
+    inMemoryAttachmentsRepository = new InMemoryAttachmentsRepository()
     recipientRepository = new InMemoryRecipientsRepository()
-    ordersRepository = new InMemoryOrdersRepository(recipientRepository)
+    ordersRepository = new InMemoryOrdersRepository(
+      inMemoryOrderAttachmentsRepository,
+      inMemoryAttachmentsRepository,
+      recipientRepository,
+    )
     sut = new DeleteOrderUseCase(ordersRepository)
   })
 

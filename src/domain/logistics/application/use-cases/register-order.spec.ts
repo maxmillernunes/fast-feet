@@ -3,22 +3,36 @@ import { InMemoryRecipientsRepository } from '@test/repositories/in-memory-recip
 import { makeRecipient } from '@test/factories/make-recipient'
 import { RegisterOrderUseCase } from './register-order'
 import { ResourceNotFoundError } from '@/core/errors/errors/resource-not-found-error'
+import { InMemoryOrderAttachmentsRepository } from '@test/repositories/in-memory-order-attachments-repository'
+import { InMemoryAttachmentsRepository } from '@test/repositories/in-memory-attachments-repository'
 
-let ordersRepository: InMemoryOrdersRepository
-let recipientsRepository: InMemoryRecipientsRepository
+let inMemoryOrdersRepository: InMemoryOrdersRepository
+let inMemoryRecipientsRepository: InMemoryRecipientsRepository
+let inMemoryAttachmentsRepository: InMemoryAttachmentsRepository
+let inMemoryOrderAttachmentsRepository: InMemoryOrderAttachmentsRepository
 let sut: RegisterOrderUseCase
 
 describe('Register Order', () => {
   beforeEach(() => {
-    recipientsRepository = new InMemoryRecipientsRepository()
-    ordersRepository = new InMemoryOrdersRepository(recipientsRepository)
-    sut = new RegisterOrderUseCase(ordersRepository, recipientsRepository)
+    inMemoryOrderAttachmentsRepository =
+      new InMemoryOrderAttachmentsRepository()
+    inMemoryAttachmentsRepository = new InMemoryAttachmentsRepository()
+    inMemoryRecipientsRepository = new InMemoryRecipientsRepository()
+    inMemoryOrdersRepository = new InMemoryOrdersRepository(
+      inMemoryOrderAttachmentsRepository,
+      inMemoryAttachmentsRepository,
+      inMemoryRecipientsRepository,
+    )
+    sut = new RegisterOrderUseCase(
+      inMemoryOrdersRepository,
+      inMemoryRecipientsRepository,
+    )
   })
 
   it('should be able to register an order', async () => {
     const recipient = makeRecipient()
 
-    await recipientsRepository.create(recipient)
+    await inMemoryRecipientsRepository.create(recipient)
 
     const result = await sut.execute({
       recipientId: recipient.id.toString(),

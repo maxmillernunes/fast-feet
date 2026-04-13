@@ -5,23 +5,34 @@ import { OrderStatus } from '../../enterprise/entities/values-objects/order-stat
 import { MarkOrderAsAwaitingUseCase } from './mark-order-as-awaiting'
 import { OrderCanNotTransitionToWaitingError } from '@/domain/logistics/enterprise/entities/errors/order-can-not-transition-to-waiting-error'
 import { InMemoryRecipientsRepository } from '@test/repositories/in-memory-recipients-repository'
+import { InMemoryOrderAttachmentsRepository } from '@test/repositories/in-memory-order-attachments-repository'
+import { InMemoryAttachmentsRepository } from '@test/repositories/in-memory-attachments-repository'
 
-let recipientsRepository: InMemoryRecipientsRepository
-let ordersRepository: InMemoryOrdersRepository
+let inMemoryOrdersRepository: InMemoryOrdersRepository
+let inMemoryRecipientsRepository: InMemoryRecipientsRepository
+let inMemoryAttachmentsRepository: InMemoryAttachmentsRepository
+let inMemoryOrderAttachmentsRepository: InMemoryOrderAttachmentsRepository
 let sut: MarkOrderAsAwaitingUseCase
 
 describe('Mark Order As Awaiting', () => {
   beforeEach(() => {
-    recipientsRepository = new InMemoryRecipientsRepository()
-    ordersRepository = new InMemoryOrdersRepository(recipientsRepository)
-    sut = new MarkOrderAsAwaitingUseCase(ordersRepository)
+    inMemoryOrderAttachmentsRepository =
+      new InMemoryOrderAttachmentsRepository()
+    inMemoryAttachmentsRepository = new InMemoryAttachmentsRepository()
+    inMemoryRecipientsRepository = new InMemoryRecipientsRepository()
+    inMemoryOrdersRepository = new InMemoryOrdersRepository(
+      inMemoryOrderAttachmentsRepository,
+      inMemoryAttachmentsRepository,
+      inMemoryRecipientsRepository,
+    )
+    sut = new MarkOrderAsAwaitingUseCase(inMemoryOrdersRepository)
   })
 
   it('should be able to mark an order as awaiting', async () => {
     const order = makeOrder({
       status: OrderStatus.create('CREATED'),
     })
-    await ordersRepository.create(order)
+    await inMemoryOrdersRepository.create(order)
 
     const result = await sut.execute({
       orderId: order.id.toString(),
@@ -52,7 +63,7 @@ describe('Mark Order As Awaiting', () => {
     const order = makeOrder({
       status: OrderStatus.create('WAITING'),
     })
-    await ordersRepository.create(order)
+    await inMemoryOrdersRepository.create(order)
 
     const result = await sut.execute({
       orderId: order.id.toString(),
@@ -66,7 +77,7 @@ describe('Mark Order As Awaiting', () => {
     const order = makeOrder({
       status: OrderStatus.create('PICKED_UP'),
     })
-    await ordersRepository.create(order)
+    await inMemoryOrdersRepository.create(order)
 
     const result = await sut.execute({
       orderId: order.id.toString(),
@@ -80,7 +91,7 @@ describe('Mark Order As Awaiting', () => {
     const order = makeOrder({
       status: OrderStatus.create('DELIVERED'),
     })
-    await ordersRepository.create(order)
+    await inMemoryOrdersRepository.create(order)
 
     const result = await sut.execute({
       orderId: order.id.toString(),

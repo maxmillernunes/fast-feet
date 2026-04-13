@@ -4,24 +4,35 @@ import { makeOrder } from '@test/factories/make-order'
 import { makeRecipient } from '@test/factories/make-recipient'
 import { GetOrderDetailsByIdUseCase } from './get-order-details-by-id'
 import { ResourceNotFoundError } from '@/core/errors/errors/resource-not-found-error'
+import { InMemoryOrderAttachmentsRepository } from '@test/repositories/in-memory-order-attachments-repository'
+import { InMemoryAttachmentsRepository } from '@test/repositories/in-memory-attachments-repository'
 
-let ordersRepository: InMemoryOrdersRepository
-let recipientsRepository: InMemoryRecipientsRepository
+let inMemoryOrdersRepository: InMemoryOrdersRepository
+let inMemoryRecipientsRepository: InMemoryRecipientsRepository
+let inMemoryAttachmentsRepository: InMemoryAttachmentsRepository
+let inMemoryOrderAttachmentsRepository: InMemoryOrderAttachmentsRepository
 let sut: GetOrderDetailsByIdUseCase
 
 describe('Get Order Details By ID', () => {
   beforeEach(() => {
-    recipientsRepository = new InMemoryRecipientsRepository()
-    ordersRepository = new InMemoryOrdersRepository(recipientsRepository)
-    sut = new GetOrderDetailsByIdUseCase(ordersRepository)
+    inMemoryOrderAttachmentsRepository =
+      new InMemoryOrderAttachmentsRepository()
+    inMemoryAttachmentsRepository = new InMemoryAttachmentsRepository()
+    inMemoryRecipientsRepository = new InMemoryRecipientsRepository()
+    inMemoryOrdersRepository = new InMemoryOrdersRepository(
+      inMemoryOrderAttachmentsRepository,
+      inMemoryAttachmentsRepository,
+      inMemoryRecipientsRepository,
+    )
+    sut = new GetOrderDetailsByIdUseCase(inMemoryOrdersRepository)
   })
 
   it('should be able to get order details with recipient by id', async () => {
     const recipient = makeRecipient()
-    await recipientsRepository.create(recipient)
+    await inMemoryRecipientsRepository.create(recipient)
 
     const order = makeOrder({ recipientId: recipient.id })
-    await ordersRepository.create(order)
+    await inMemoryOrdersRepository.create(order)
 
     const result = await sut.execute({
       orderId: order.id.toString(),

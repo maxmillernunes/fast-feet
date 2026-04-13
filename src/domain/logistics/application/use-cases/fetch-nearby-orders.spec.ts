@@ -3,16 +3,27 @@ import { makeRecipient } from '@test/factories/make-recipient'
 import { InMemoryOrdersRepository } from '@test/repositories/in-memory-orders-repository'
 import { FetchNearbyOrdersUseCase } from './fetch-nearby-orders'
 import { InMemoryRecipientsRepository } from '@test/repositories/in-memory-recipients-repository'
+import { InMemoryOrderAttachmentsRepository } from '@test/repositories/in-memory-order-attachments-repository'
+import { InMemoryAttachmentsRepository } from '@test/repositories/in-memory-attachments-repository'
 
-let ordersRepository: InMemoryOrdersRepository
-let recipientsRepository: InMemoryRecipientsRepository
+let inMemoryOrdersRepository: InMemoryOrdersRepository
+let inMemoryRecipientsRepository: InMemoryRecipientsRepository
+let inMemoryAttachmentsRepository: InMemoryAttachmentsRepository
+let inMemoryOrderAttachmentsRepository: InMemoryOrderAttachmentsRepository
 let sut: FetchNearbyOrdersUseCase
 
 describe('Fetch Nearby Orders Use Case', () => {
   beforeEach(() => {
-    recipientsRepository = new InMemoryRecipientsRepository()
-    ordersRepository = new InMemoryOrdersRepository(recipientsRepository)
-    sut = new FetchNearbyOrdersUseCase(ordersRepository)
+    inMemoryOrderAttachmentsRepository =
+      new InMemoryOrderAttachmentsRepository()
+    inMemoryAttachmentsRepository = new InMemoryAttachmentsRepository()
+    inMemoryRecipientsRepository = new InMemoryRecipientsRepository()
+    inMemoryOrdersRepository = new InMemoryOrdersRepository(
+      inMemoryOrderAttachmentsRepository,
+      inMemoryAttachmentsRepository,
+      inMemoryRecipientsRepository,
+    )
+    sut = new FetchNearbyOrdersUseCase(inMemoryOrdersRepository)
   })
 
   it('should be able to fetch nearby orders', async () => {
@@ -21,7 +32,7 @@ describe('Fetch Nearby Orders Use Case', () => {
       longitude: -46.5957692,
     })
 
-    await recipientsRepository.create(recipient)
+    await inMemoryRecipientsRepository.create(recipient)
 
     const order1 = makeOrder({ recipientId: recipient.id })
 
@@ -29,9 +40,9 @@ describe('Fetch Nearby Orders Use Case', () => {
 
     const order3 = makeOrder({ recipientId: recipient.id })
 
-    await ordersRepository.create(order1)
-    await ordersRepository.create(order2)
-    await ordersRepository.create(order3)
+    await inMemoryOrdersRepository.create(order1)
+    await inMemoryOrdersRepository.create(order2)
+    await inMemoryOrdersRepository.create(order3)
 
     const result = await sut.execute({
       userLatitude: -23.6821608,
@@ -60,7 +71,7 @@ describe('Fetch Nearby Orders Use Case', () => {
       longitude: -38.4534453,
     })
 
-    await recipientsRepository.create(recipient)
+    await inMemoryRecipientsRepository.create(recipient)
 
     const order1 = makeOrder({ recipientId: recipient.id })
 
@@ -68,9 +79,9 @@ describe('Fetch Nearby Orders Use Case', () => {
 
     const order3 = makeOrder({ recipientId: recipient.id })
 
-    await ordersRepository.create(order1)
-    await ordersRepository.create(order2)
-    await ordersRepository.create(order3)
+    await inMemoryOrdersRepository.create(order1)
+    await inMemoryOrdersRepository.create(order2)
+    await inMemoryOrdersRepository.create(order3)
 
     const result = await sut.execute({
       userLatitude: -23.6821608,

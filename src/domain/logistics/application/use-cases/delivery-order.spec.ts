@@ -7,15 +7,26 @@ import { OrderCanNotTransitionToDeliveryError } from '@/domain/logistics/enterpr
 import { DeliveryDriverDoesNotMatchError } from '@/domain/logistics/enterprise/entities/errors/delivery-driver-does-not-match-error'
 import { InMemoryRecipientsRepository } from '@test/repositories/in-memory-recipients-repository'
 import { UniqueEntityId } from '@/core/entities/unique-entity-id'
+import { InMemoryAttachmentsRepository } from '@test/repositories/in-memory-attachments-repository'
+import { InMemoryOrderAttachmentsRepository } from '@test/repositories/in-memory-order-attachments-repository'
 
+let inMemoryOrderAttachmentsRepository: InMemoryOrderAttachmentsRepository
+let inMemoryAttachmentsRepository: InMemoryAttachmentsRepository
 let recipientRepository: InMemoryRecipientsRepository
 let ordersRepository: InMemoryOrdersRepository
 let sut: DeliveryOrderUseCase
 
 describe('Delivery Order', () => {
   beforeEach(() => {
+    inMemoryOrderAttachmentsRepository =
+      new InMemoryOrderAttachmentsRepository()
+    inMemoryAttachmentsRepository = new InMemoryAttachmentsRepository()
     recipientRepository = new InMemoryRecipientsRepository()
-    ordersRepository = new InMemoryOrdersRepository(recipientRepository)
+    ordersRepository = new InMemoryOrdersRepository(
+      inMemoryOrderAttachmentsRepository,
+      inMemoryAttachmentsRepository,
+      recipientRepository,
+    )
     sut = new DeliveryOrderUseCase(ordersRepository)
   })
 
@@ -29,6 +40,7 @@ describe('Delivery Order', () => {
     const result = await sut.execute({
       deliveryDriveId: 'driver-1',
       orderId: order.id.toString(),
+      attachmentIds: ['1', '2'],
     })
 
     expect(result.isRight()).toBe(true)
@@ -41,12 +53,23 @@ describe('Delivery Order', () => {
         deliveredAt: expect.any(Date),
       }),
     })
+    expect(inMemoryOrderAttachmentsRepository.items).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          attachmentId: new UniqueEntityId('1'),
+        }),
+        expect.objectContaining({
+          attachmentId: new UniqueEntityId('2'),
+        }),
+      ]),
+    )
   })
 
   it('should not be able to deliver an order when the order does not exists', async () => {
     const result = await sut.execute({
       deliveryDriveId: 'driver-1',
       orderId: 'non-existing-order-id',
+      attachmentIds: ['1', '2'],
     })
 
     expect(result.isLeft()).toBe(true)
@@ -63,6 +86,7 @@ describe('Delivery Order', () => {
     const result = await sut.execute({
       deliveryDriveId: 'driver-1',
       orderId: order.id.toString(),
+      attachmentIds: ['1', '2'],
     })
 
     expect(result.isLeft()).toBe(true)
@@ -79,6 +103,7 @@ describe('Delivery Order', () => {
     const result = await sut.execute({
       deliveryDriveId: 'driver-2',
       orderId: order.id.toString(),
+      attachmentIds: ['1', '2'],
     })
 
     expect(result.isLeft()).toBe(true)

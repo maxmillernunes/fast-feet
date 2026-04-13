@@ -6,10 +6,12 @@ import { ResourceNotFoundError } from '@/core/errors/errors/resource-not-found-e
 import type { DeliveryDriverDoesNotMatchError } from '../../enterprise/entities/errors/delivery-driver-does-not-match-error'
 import type { OrderCanNotTransitionToDeliveryError } from '@/domain/logistics/enterprise/entities/errors/order-can-not-transition-to-delivery-error'
 import type { OrderCanNotTransitionToReturnedError } from '@/domain/logistics/enterprise/entities/errors/order-can-not-transition-to-returned-error'
+import { OrderAttachment } from '../../enterprise/entities/order-attachment'
 
 interface DeliveryOrderUseCaseRequest {
   orderId: string
   deliveryDriveId: string
+  attachmentIds: string[]
 }
 
 type DeliveryOrderUseCaseResponse = Either<
@@ -27,6 +29,7 @@ export class DeliveryOrderUseCase {
 
   async execute({
     deliveryDriveId,
+    attachmentIds,
     orderId,
   }: DeliveryOrderUseCaseRequest): Promise<DeliveryOrderUseCaseResponse> {
     const order = await this.ordersRepository.findById(orderId)
@@ -35,7 +38,17 @@ export class DeliveryOrderUseCase {
       return left(new ResourceNotFoundError())
     }
 
-    const result = order.deliver(new UniqueEntityId(deliveryDriveId))
+    const orderAttachments = attachmentIds.map((attachmentId) => {
+      return OrderAttachment.create({
+        attachmentId: new UniqueEntityId(attachmentId),
+        orderId: order.id,
+      })
+    })
+
+    const result = order.deliver(
+      new UniqueEntityId(deliveryDriveId),
+      orderAttachments,
+    )
 
     if (result.isLeft()) {
       const error = result.value

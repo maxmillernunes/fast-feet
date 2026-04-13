@@ -4,16 +4,27 @@ import { makeRecipient } from '@test/factories/make-recipient'
 import { InMemoryOrdersRepository } from '@test/repositories/in-memory-orders-repository'
 import { FetchRecentOrdersUseCase } from './fetch-orders-by-recipient-id'
 import { InMemoryRecipientsRepository } from '@test/repositories/in-memory-recipients-repository'
+import { InMemoryOrderAttachmentsRepository } from '@test/repositories/in-memory-order-attachments-repository'
+import { InMemoryAttachmentsRepository } from '@test/repositories/in-memory-attachments-repository'
 
-let recipientsRepository: InMemoryRecipientsRepository
-let ordersRepository: InMemoryOrdersRepository
+let inMemoryOrdersRepository: InMemoryOrdersRepository
+let inMemoryRecipientsRepository: InMemoryRecipientsRepository
+let inMemoryAttachmentsRepository: InMemoryAttachmentsRepository
+let inMemoryOrderAttachmentsRepository: InMemoryOrderAttachmentsRepository
 let sut: FetchRecentOrdersUseCase
 
 describe('Fetch Orders By RecipientId', () => {
   beforeAll(() => {
-    recipientsRepository = new InMemoryRecipientsRepository()
-    ordersRepository = new InMemoryOrdersRepository(recipientsRepository)
-    sut = new FetchRecentOrdersUseCase(ordersRepository)
+    inMemoryOrderAttachmentsRepository =
+      new InMemoryOrderAttachmentsRepository()
+    inMemoryAttachmentsRepository = new InMemoryAttachmentsRepository()
+    inMemoryRecipientsRepository = new InMemoryRecipientsRepository()
+    inMemoryOrdersRepository = new InMemoryOrdersRepository(
+      inMemoryOrderAttachmentsRepository,
+      inMemoryAttachmentsRepository,
+      inMemoryRecipientsRepository,
+    )
+    sut = new FetchRecentOrdersUseCase(inMemoryOrdersRepository)
   })
 
   it('should fetch orders by recipient ID', async () => {
@@ -21,8 +32,8 @@ describe('Fetch Orders By RecipientId', () => {
     const order1 = makeOrder({ recipientId: recipient.id })
     const order2 = makeOrder({ recipientId: recipient.id })
 
-    await ordersRepository.create(order1)
-    await ordersRepository.create(order2)
+    await inMemoryOrdersRepository.create(order1)
+    await inMemoryOrdersRepository.create(order2)
 
     const result = await sut.execute({
       recipientId: recipient.id.toString(),
@@ -50,7 +61,7 @@ describe('Fetch Orders By RecipientId', () => {
       const order = makeOrder({
         recipientId: recipient.id,
       })
-      await ordersRepository.create(order)
+      await inMemoryOrdersRepository.create(order)
     }
 
     const result = await sut.execute({

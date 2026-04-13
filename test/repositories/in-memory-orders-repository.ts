@@ -9,11 +9,18 @@ import type {
 import { GetDistanceBetweenCoordinates } from '@test/utils/get-distance-between-coordinates'
 import { InMemoryRecipientsRepository } from './in-memory-recipients-repository'
 import { DomainEvents } from '@/core/events/domain-events'
+import { InMemoryAttachmentsRepository } from './in-memory-attachments-repository'
+import { InMemoryOrderAttachmentsRepository } from './in-memory-order-attachments-repository'
+import type { OrderAttachment } from '@/domain/logistics/enterprise/entities/order-attachment'
 
 export class InMemoryOrdersRepository implements OrdersRepository {
   public items: Order[] = []
 
-  constructor(private recipientsRepository: InMemoryRecipientsRepository) {}
+  constructor(
+    private orderAttachmentsRepository: InMemoryOrderAttachmentsRepository,
+    private attachmentsRepository: InMemoryAttachmentsRepository,
+    private recipientsRepository: InMemoryRecipientsRepository,
+  ) {}
 
   async findOrdersByRecipientId(
     recipientId: string,
@@ -135,6 +142,12 @@ export class InMemoryOrdersRepository implements OrdersRepository {
 
   async save(order: Order): Promise<void> {
     const orderIndex = this.items.findIndex((item) => item.id.equals(order.id))
+
+    if (order.attachments && order.attachments.length) {
+      await this.orderAttachmentsRepository.createMany(
+        order.attachments!.map((attachment) => attachment),
+      )
+    }
 
     this.items[orderIndex] = order
 
