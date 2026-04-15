@@ -1,9 +1,16 @@
 import { Module } from '@nestjs/common'
-import { AppController } from './app.controller'
+import { HttpModule } from './infra/http/http.module'
+import { ConfigModule } from '@nestjs/config'
+import { envSchema } from './infra/env/env'
 
 @Module({
-  imports: [],
-  controllers: [AppController],
+  imports: [
+    ConfigModule.forRoot({
+      validate: (env) => envSchema.parse(env),
+      isGlobal: true,
+    }),
+  ],
+  controllers: [],
   providers: [],
 })
 export class AppModule {}
