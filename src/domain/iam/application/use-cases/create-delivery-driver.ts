@@ -38,6 +38,7 @@ export class CreateDeliveryDriverUseCase {
     password,
   }: CreateDeliveryDriverRequest): Promise<CreateDeliveryDriverResponse> {
     const currentUser = await this.usersRepository.findById(userId)
+
     if (!currentUser || currentUser.role !== UserRole.ADMIN) {
       return left(new NotAllowedError())
     }

@@ -9,6 +9,7 @@ import { envSchema } from './infra/env/env'
       validate: (env) => envSchema.parse(env),
       isGlobal: true,
     }),
+    HttpModule,
   ],
   controllers: [],
   providers: [],
