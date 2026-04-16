@@ -60,3 +60,6 @@ data
 
 # Prisma generated client
 /src/infra/database/prisma/client
+
+# Keys
+*.pem

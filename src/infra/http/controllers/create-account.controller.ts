@@ -1,7 +1,8 @@
-import { Body, Controller, Post } from '@nestjs/common'
+import { BadRequestException, Body, Controller, Post } from '@nestjs/common'
 import z from 'zod'
 import { ZodValidationPipe } from '../pipes/zod-validation-pipes'
 import { PrismaService } from '@/infra/database/prisma/prisma.service'
+import { hash } from 'bcrypt'
 
 const createAccountBodySchema = z.object({
   name: z.string(),
@@ -37,8 +38,24 @@ export class CreateAccountController {
 
   @Post()
   async handle(@Body(bodyValidationSchema) body: CreateAccountBodySchema) {
-    const user = await this.prisma.user.findMany()
+    const { name, document, password } = body
 
-    console.log(user)
+    const existingUser = await this.prisma.user.findFirst({
+      where: { document },
+    })
+
+    if (existingUser) {
+      throw new BadRequestException('User with this document already exists')
+    }
+
+    const passwordHash = await hash(password, 10)
+
+    await this.prisma.user.create({
+      data: {
+        name,
+        document,
+        password: passwordHash,
+      },
+    })
   }
 }
