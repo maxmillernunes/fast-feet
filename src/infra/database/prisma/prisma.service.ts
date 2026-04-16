@@ -14,9 +14,12 @@ export class PrismaService
 {
   constructor(envService: EnvService) {
     super({
-      adapter: new PrismaPg({
-        connectionString: envService.get('DATABASE_URL'),
-      }),
+      adapter: new PrismaPg(
+        {
+          connectionString: envService.get('DATABASE_URL'),
+        },
+        { schema: envService.get('DATABASE_SCHEMA') },
+      ),
       log: ['error', 'warn'],
     })
   }

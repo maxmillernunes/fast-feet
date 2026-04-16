@@ -1,4 +1,3 @@
-import { B } from '@faker-js/faker/dist/airline-eVQV6kbz'
 import { Body, Controller, Post, UnauthorizedException } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import z from 'zod'
