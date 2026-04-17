@@ -19,7 +19,7 @@ export class Password {
     if (plain.length < 8) return false
     if (!/[A-Z]/.test(plain)) return false
     if (!/[0-9]/.test(plain)) return false
-    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(plain)) return false
+    if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(plain)) return false
     return true
   }
 
