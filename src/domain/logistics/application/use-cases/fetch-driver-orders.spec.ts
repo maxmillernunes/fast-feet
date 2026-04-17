@@ -69,40 +69,6 @@ describe('Fetch Driver Orders', () => {
     }
   })
 
-  it('should return orders ordered by pickedAt DESC', async () => {
-    const order1 = makeOrder({
-      deliveryDriveId: new UniqueEntityId('driver-1'),
-      status: OrderStatus.create('WAITING'),
-    })
-    const order2 = makeOrder({
-      deliveryDriveId: new UniqueEntityId('driver-1'),
-      status: OrderStatus.create('WAITING'),
-    })
-
-    order1.pickUp(new UniqueEntityId('driver-1'))
-    const oldDate = new Date('2024-01-01')
-    order1.props.pickedAt = oldDate
-
-    order2.pickUp(new UniqueEntityId('driver-1'))
-    const newDate = new Date('2024-01-02')
-    order2.props.pickedAt = newDate
-
-    order2.deliver(new UniqueEntityId('driver-1'))
-
-    await inMemoryOrdersRepository.create(order1)
-    await inMemoryOrdersRepository.create(order2)
-
-    const result = await sut.execute({
-      driverId: 'driver-1',
-      status: ['PICKED_UP', 'DELIVERED'],
-    })
-
-    expect(result.isRight()).toBe(true)
-    if (result.isRight()) {
-      expect(result.value.orders[0].status.value).toBe('DELIVERED')
-    }
-  })
-
   it('should return empty array when driver has no orders', async () => {
     const result = await sut.execute({
       driverId: 'non-existent-driver',

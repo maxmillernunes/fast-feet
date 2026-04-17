@@ -11,7 +11,6 @@ import { InMemoryRecipientsRepository } from './in-memory-recipients-repository'
 import { DomainEvents } from '@/core/events/domain-events'
 import { InMemoryAttachmentsRepository } from './in-memory-attachments-repository'
 import { InMemoryOrderAttachmentsRepository } from './in-memory-order-attachments-repository'
-import type { OrderAttachment } from '@/domain/logistics/enterprise/entities/order-attachment'
 
 export class InMemoryOrdersRepository implements OrdersRepository {
   public items: Order[] = []
@@ -145,7 +144,7 @@ export class InMemoryOrdersRepository implements OrdersRepository {
 
     if (order.attachments && order.attachments.length) {
       await this.orderAttachmentsRepository.createMany(
-        order.attachments!.map((attachment) => attachment),
+        order.attachments.map((attachment) => attachment),
       )
     }
 

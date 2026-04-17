@@ -13,7 +13,11 @@ import { InMemoryNotificationsRepository } from '@test/repositories/in-memory-no
 import { makeRecipient } from '@test/factories/make-recipient'
 import { waitFor } from '@test/utils/wait-for'
 import { OrderStatus } from '@/domain/logistics/enterprise/entities/values-objects/order-status'
+import { InMemoryOrderAttachmentsRepository } from '@test/repositories/in-memory-order-attachments-repository'
+import { InMemoryAttachmentsRepository } from '@test/repositories/in-memory-attachments-repository'
 
+let inMemoryOrderAttachmentsRepository: InMemoryOrderAttachmentsRepository
+let inMemoryAttachmentsRepository: InMemoryAttachmentsRepository
 let inMemoryOrdersRepository: InMemoryOrdersRepository
 let inMemoryRecipientsRepository: InMemoryRecipientsRepository
 
@@ -28,8 +32,13 @@ let sendNotificationExecuteSpy: MockInstance<
 
 describe('On Order Picked Up', () => {
   beforeEach(() => {
+    inMemoryOrderAttachmentsRepository =
+      new InMemoryOrderAttachmentsRepository()
+    inMemoryAttachmentsRepository = new InMemoryAttachmentsRepository()
     inMemoryRecipientsRepository = new InMemoryRecipientsRepository()
     inMemoryOrdersRepository = new InMemoryOrdersRepository(
+      inMemoryOrderAttachmentsRepository,
+      inMemoryAttachmentsRepository,
       inMemoryRecipientsRepository,
     )
 

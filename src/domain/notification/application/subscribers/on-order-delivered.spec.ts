@@ -13,7 +13,11 @@ import {
 import { InMemoryNotificationsRepository } from '@test/repositories/in-memory-notifications-repository'
 import { makeRecipient } from '@test/factories/make-recipient'
 import { waitFor } from '@test/utils/wait-for'
+import { InMemoryOrderAttachmentsRepository } from '@test/repositories/in-memory-order-attachments-repository'
+import { InMemoryAttachmentsRepository } from '@test/repositories/in-memory-attachments-repository'
 
+let inMemoryOrderAttachmentsRepository: InMemoryOrderAttachmentsRepository
+let inMemoryAttachmentsRepository: InMemoryAttachmentsRepository
 let inMemoryOrdersRepository: InMemoryOrdersRepository
 let inMemoryRecipientsRepository: InMemoryRecipientsRepository
 
@@ -31,8 +35,13 @@ describe('On Order Delivered', () => {
     DomainEvents.clearHandlers()
     DomainEvents.clearMarkedAggregates()
 
+    inMemoryOrderAttachmentsRepository =
+      new InMemoryOrderAttachmentsRepository()
+    inMemoryAttachmentsRepository = new InMemoryAttachmentsRepository()
     inMemoryRecipientsRepository = new InMemoryRecipientsRepository()
     inMemoryOrdersRepository = new InMemoryOrdersRepository(
+      inMemoryOrderAttachmentsRepository,
+      inMemoryAttachmentsRepository,
       inMemoryRecipientsRepository,
     )
 
@@ -60,7 +69,7 @@ describe('On Order Delivered', () => {
     order.pickUp(deliveryDriverId)
     await inMemoryOrdersRepository.save(order)
 
-    order.deliver(deliveryDriverId)
+    order.deliver(deliveryDriverId, [])
     await inMemoryOrdersRepository.save(order)
 
     await waitFor(() => {

@@ -11,7 +11,11 @@ import {
 import { InMemoryNotificationsRepository } from '@test/repositories/in-memory-notifications-repository'
 import { makeRecipient } from '@test/factories/make-recipient'
 import { waitFor } from '@test/utils/wait-for'
+import { InMemoryOrderAttachmentsRepository } from '@test/repositories/in-memory-order-attachments-repository'
+import { InMemoryAttachmentsRepository } from '@test/repositories/in-memory-attachments-repository'
 
+let inMemoryOrderAttachmentsRepository: InMemoryOrderAttachmentsRepository
+let inMemoryAttachmentsRepository: InMemoryAttachmentsRepository
 let inMemoryOrdersRepository: InMemoryOrdersRepository
 let inMemoryRecipientsRepository: InMemoryRecipientsRepository
 
@@ -26,8 +30,13 @@ let sendNotificationExecuteSpy: MockInstance<
 
 describe('On Order Created', () => {
   beforeEach(() => {
+    inMemoryOrderAttachmentsRepository =
+      new InMemoryOrderAttachmentsRepository()
+    inMemoryAttachmentsRepository = new InMemoryAttachmentsRepository()
     inMemoryRecipientsRepository = new InMemoryRecipientsRepository()
     inMemoryOrdersRepository = new InMemoryOrdersRepository(
+      inMemoryOrderAttachmentsRepository,
+      inMemoryAttachmentsRepository,
       inMemoryRecipientsRepository,
     )
 
