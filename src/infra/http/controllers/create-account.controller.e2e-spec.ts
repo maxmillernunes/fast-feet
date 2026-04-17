@@ -9,7 +9,7 @@ describe('Create Account (e2e)', () => {
   let prisma: PrismaService
 
   beforeAll(async () => {
-    const { AppModule } = await import('@/app.module')
+    const { AppModule } = await import('@/infra/app.module')
 
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
