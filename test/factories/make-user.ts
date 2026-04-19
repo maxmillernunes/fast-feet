@@ -1,6 +1,5 @@
 import { UniqueEntityId } from '@/core/entities/unique-entity-id'
 import { User, type UserProps } from '@/domain/iam/enterprise/entities/user'
-import { UserRole } from '@/domain/iam/enterprise/entities/values-objects/user-role'
 import { Password } from '@/domain/iam/enterprise/entities/values-objects/password'
 import { faker } from '@faker-js/faker'
 
@@ -10,15 +9,11 @@ export function makeUser(
   override: Partial<UserProps> = {},
   id?: UniqueEntityId,
 ) {
-  const password = Password.createWithoutValidation(
-    `hashed_${DEFAULT_PASSWORD}`,
-  )
+  const password = Password.create(`hashed_${DEFAULT_PASSWORD}`)
 
   const user = User.create(
     {
-      name: override.name ?? faker.person.fullName(),
-      cpf: override.cpf ?? faker.string.numeric(11),
-      role: override.role ?? UserRole.DELIVERY_DRIVER,
+      login: override.login ?? faker.internet.username(),
       password: override.password ?? password,
       ...override,
     },

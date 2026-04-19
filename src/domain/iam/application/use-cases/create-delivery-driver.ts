@@ -1,25 +1,28 @@
 import { Either, left, right } from '@/core/either'
 import { NotAllowedError } from '@/core/errors/errors/not-allowed-error'
-import { InvalidCpfError } from '../../enterprise/entities/errors/invalid-cpf-error'
+import { InvalidDocumentError } from '../../enterprise/entities/errors/invalid-document-error'
 import { UserAlreadyExistsError } from '../../enterprise/entities/errors/user-already-exists-error'
 import { InvalidPasswordError } from '../../enterprise/entities/errors/invalid-password-error'
-import { UserRole } from '../../enterprise/entities/values-objects/user-role'
 import { Password } from '../../enterprise/entities/values-objects/password'
-import { Cpf } from '../../enterprise/entities/values-objects/cpf'
 import { UsersRepository } from '../repositories/users-repository'
 import { HashGenerator } from '../cryptography/hash-generator'
 import { User } from '../../enterprise/entities/user'
+import { Document } from '../../enterprise/entities/values-objects/document'
+import { DeliveryDriver } from '../../enterprise/entities/delivery-driver'
+import { AdminsRepository } from '../repositories/admins-repository'
+import { DeliveryDriversRepository } from '../repositories/delivery-drivers-repository'
 
 interface CreateDeliveryDriverRequest {
   userId: string
   name: string
-  cpf: string
+  document: string
   password: string
+  email: string
 }
 
 type CreateDeliveryDriverResponse = Either<
   | NotAllowedError
-  | InvalidCpfError
+  | InvalidDocumentError
   | UserAlreadyExistsError
   | InvalidPasswordError,
   { user: User }
@@ -28,46 +31,65 @@ type CreateDeliveryDriverResponse = Either<
 export class CreateDeliveryDriverUseCase {
   constructor(
     private usersRepository: UsersRepository,
+    private adminsRepository: AdminsRepository,
+    private deliveryDriversRepository: DeliveryDriversRepository,
     private hashGenerator: HashGenerator,
   ) {}
 
   async execute({
     userId,
     name,
-    cpf,
+    document,
     password,
+    email,
   }: CreateDeliveryDriverRequest): Promise<CreateDeliveryDriverResponse> {
-    const currentUser = await this.usersRepository.findById(userId)
+    if (!Document.validate(document)) {
+      return left(new InvalidDocumentError(document))
+    }
 
-    if (!currentUser || currentUser.role !== UserRole.ADMIN) {
+    const isAdmin = await this.adminsRepository.findById(userId)
+
+    if (!isAdmin) {
       return left(new NotAllowedError())
     }
 
-    if (!Cpf.validate(cpf)) {
-      return left(new InvalidCpfError(cpf))
-    }
+    const existingUser = await this.usersRepository.findByLogin(document)
 
-    const existingUser = await this.usersRepository.findByCpf(cpf)
     if (existingUser) {
-      return left(new UserAlreadyExistsError(cpf))
+      return left(new UserAlreadyExistsError(document))
     }
 
-    const passwordResult = Password.create(password)
+    const existsDeliveryDriver =
+      await this.deliveryDriversRepository.findByEmail(email)
+
+    if (existsDeliveryDriver) {
+      return left(new UserAlreadyExistsError(document))
+    }
+
+    const passwordResult = Password.createFromText(password)
+
     if (passwordResult.isLeft()) {
       return left(passwordResult.value)
     }
 
     const hashedPassword = await this.hashGenerator.generate(password)
-    const hashedPasswordVO = Password.createWithoutValidation(hashedPassword)
+    const hashedPasswordVO = Password.create(hashedPassword)
 
     const user = User.create({
-      name,
-      cpf,
-      role: UserRole.DELIVERY_DRIVER,
+      login: document,
       password: hashedPasswordVO,
     })
 
     await this.usersRepository.create(user)
+
+    const deliveryDriver = DeliveryDriver.create({
+      name,
+      document,
+      email,
+      userId: user.id,
+    })
+
+    await this.deliveryDriversRepository.create(deliveryDriver)
 
     return right({ user })
   }

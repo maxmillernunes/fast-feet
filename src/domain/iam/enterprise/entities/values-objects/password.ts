@@ -2,16 +2,17 @@ import { Either, left, right } from '@/core/either'
 import { InvalidPasswordError } from '../errors/invalid-password-error'
 
 export class Password {
-  private constructor(private readonly hash: string) {}
+  public value: string
 
-  get value(): string {
-    return this.hash
+  constructor(value: string) {
+    this.value = value
   }
 
-  static create(plain: string): Either<InvalidPasswordError, Password> {
+  static createFromText(plain: string): Either<InvalidPasswordError, Password> {
     if (!Password.validate(plain)) {
       return left(new InvalidPasswordError())
     }
+
     return right(new Password(plain))
   }
 
@@ -23,7 +24,7 @@ export class Password {
     return true
   }
 
-  static createWithoutValidation(hash: string): Password {
-    return new Password(hash)
+  static create(value: string): Password {
+    return new Password(value)
   }
 }

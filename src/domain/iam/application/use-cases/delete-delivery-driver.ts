@@ -1,9 +1,10 @@
 import { Either, left, right } from '@/core/either'
 import { NotAllowedError } from '@/core/errors/errors/not-allowed-error'
 import { UserNotFoundError } from '../../enterprise/entities/errors/user-not-found-error'
-import { UserRole } from '../../enterprise/entities/values-objects/user-role'
 import { UsersRepository } from '../repositories/users-repository'
 import { User } from '../../enterprise/entities/user'
+import { AdminsRepository } from '../repositories/admins-repository'
+import { DeliveryDriversRepository } from '../repositories/delivery-drivers-repository'
 
 interface DeleteDeliveryDriverRequest {
   userId: string
@@ -16,25 +17,40 @@ type DeleteDeliveryDriverResponse = Either<
 >
 
 export class DeleteDeliveryDriverUseCase {
-  constructor(private usersRepository: UsersRepository) {}
+  constructor(
+    private usersRepository: UsersRepository,
+    private adminsRepository: AdminsRepository,
+    private deliveryDriversRepository: DeliveryDriversRepository,
+  ) {}
 
   async execute({
     userId,
     deliveryDriverId,
   }: DeleteDeliveryDriverRequest): Promise<DeleteDeliveryDriverResponse> {
-    const currentUser = await this.usersRepository.findById(userId)
-    if (!currentUser || currentUser.role !== UserRole.ADMIN) {
+    const isAdmin = await this.adminsRepository.findById(userId)
+
+    if (!isAdmin) {
       return left(new NotAllowedError())
     }
 
-    const user = await this.usersRepository.findById(deliveryDriverId)
+    const driver =
+      await this.deliveryDriversRepository.findById(deliveryDriverId)
 
-    if (!user || user.role !== UserRole.DELIVERY_DRIVER) {
+    if (!driver) {
+      return left(new UserNotFoundError(deliveryDriverId))
+    }
+
+    const user = await this.usersRepository.findById(driver.userId.toString())
+
+    if (!user) {
       return left(new UserNotFoundError(deliveryDriverId))
     }
 
     user.delete()
     await this.usersRepository.save(user)
+
+    driver.delete()
+    await this.deliveryDriversRepository.save(driver)
 
     return right({ user })
   }

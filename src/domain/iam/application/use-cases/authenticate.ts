@@ -5,7 +5,7 @@ import { HashComparer } from '../cryptography/hash-comparer'
 import { User } from '../../enterprise/entities/user'
 
 interface AuthenticateRequest {
-  cpf: string
+  login: string
   password: string
 }
 
@@ -18,10 +18,10 @@ export class AuthenticateUseCase {
   ) {}
 
   async execute({
-    cpf,
+    login,
     password,
   }: AuthenticateRequest): Promise<AuthenticateResponse> {
-    const user = await this.usersRepository.findByCpf(cpf)
+    const user = await this.usersRepository.findByLogin(login)
 
     if (!user) {
       return left(new InvalidCredentialsError())

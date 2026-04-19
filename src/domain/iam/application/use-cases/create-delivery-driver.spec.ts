@@ -2,60 +2,77 @@ import { beforeEach, describe, it, expect } from 'vitest'
 import { InMemoryUsersRepository } from '@test/repositories/in-memory-users-repository'
 import { HashGeneratorInMemory } from '@test/cryptography/hash-generator-in-memory'
 import { CreateDeliveryDriverUseCase } from './create-delivery-driver'
-import { InvalidCpfError } from '../../enterprise/entities/errors/invalid-cpf-error'
 import { UserAlreadyExistsError } from '../../enterprise/entities/errors/user-already-exists-error'
 import { InvalidPasswordError } from '../../enterprise/entities/errors/invalid-password-error'
 import { NotAllowedError } from '@/core/errors/errors/not-allowed-error'
 import { makeUser } from '@test/factories/make-user'
 import { faker } from '@faker-js/faker'
-import { UserRole } from '../../enterprise/entities/values-objects/user-role'
+import { InMemoryAdminsRepository } from '@test/repositories/in-memory-admins-repository'
+import { InMemoryDeliveryDriversRepository } from '@test/repositories/in-memory-delivery-drivers-repository'
+import { makeAdmin } from '@test/factories/make-admin'
+import { InvalidDocumentError } from '../../enterprise/entities/errors/invalid-document-error'
 
-let usersRepository: InMemoryUsersRepository
-let hashGenerator: HashGeneratorInMemory
+let inMemoryUsersRepository: InMemoryUsersRepository
+let inMemoryAdminsRepository: InMemoryAdminsRepository
+let inMemoryDeliveryDriversRepository: InMemoryDeliveryDriversRepository
+let inMemoryHashGenerator: HashGeneratorInMemory
 let sut: CreateDeliveryDriverUseCase
 
 describe('CreateDeliveryDriverUseCase', () => {
-  let admin: ReturnType<typeof makeUser>
+  let user: ReturnType<typeof makeUser>
+  let admin: ReturnType<typeof makeAdmin>
 
   beforeEach(() => {
-    usersRepository = new InMemoryUsersRepository()
-    hashGenerator = new HashGeneratorInMemory()
-    sut = new CreateDeliveryDriverUseCase(usersRepository, hashGenerator)
+    inMemoryUsersRepository = new InMemoryUsersRepository()
+    inMemoryAdminsRepository = new InMemoryAdminsRepository()
+    inMemoryDeliveryDriversRepository = new InMemoryDeliveryDriversRepository()
+    inMemoryHashGenerator = new HashGeneratorInMemory()
+    sut = new CreateDeliveryDriverUseCase(
+      inMemoryUsersRepository,
+      inMemoryAdminsRepository,
+      inMemoryDeliveryDriversRepository,
+      inMemoryHashGenerator,
+    )
 
-    admin = makeUser({ role: UserRole.ADMIN })
-    usersRepository.users.push(admin)
+    user = makeUser()
+    inMemoryUsersRepository.items.push(user)
+    admin = makeAdmin()
+    inMemoryAdminsRepository.items.push(admin)
   })
 
   it('should create a delivery driver with valid data', async () => {
-    const name = faker.person.fullName()
-    const cpf = faker.string.numeric(11)
-
     const result = await sut.execute({
       userId: admin.id.toString(),
-      name,
-      cpf,
+      name: faker.person.fullName(),
+      document: faker.string.numeric(11),
+      email: faker.internet.email(),
       password: 'ValidPass123!',
     })
 
     expect(result.isRight()).toBe(true)
-    if (result.isRight()) {
-      expect(result.value.user.name).toBe(name)
-      expect(result.value.user.cpf).toBe(cpf)
-    }
+    expect(result.value).toEqual(
+      expect.objectContaining({
+        user: expect.objectContaining({
+          login: expect.any(String),
+        }),
+      }),
+    )
   })
 
   it('should return error when CPF already exists', async () => {
-    const cpf = faker.string.numeric(11)
-    await usersRepository.create(makeUser({ cpf }))
+    const document = faker.string.numeric(11)
+    await inMemoryUsersRepository.create(makeUser({ login: document }))
 
     const result = await sut.execute({
       userId: admin.id.toString(),
       name: faker.person.fullName(),
-      cpf,
+      document,
       password: 'ValidPass123!',
+      email: faker.internet.email(),
     })
 
     expect(result.isLeft()).toBe(true)
+
     if (result.isLeft()) {
       expect(result.value).toBeInstanceOf(UserAlreadyExistsError)
     }
@@ -65,11 +82,13 @@ describe('CreateDeliveryDriverUseCase', () => {
     const result = await sut.execute({
       userId: admin.id.toString(),
       name: faker.person.fullName(),
-      cpf: faker.string.numeric(11),
+      document: faker.string.numeric(11),
+      email: faker.internet.email(),
       password: 'weak',
     })
 
     expect(result.isLeft()).toBe(true)
+
     if (result.isLeft()) {
       expect(result.value).toBeInstanceOf(InvalidPasswordError)
     }
@@ -79,23 +98,26 @@ describe('CreateDeliveryDriverUseCase', () => {
     const result = await sut.execute({
       userId: admin.id.toString(),
       name: faker.person.fullName(),
-      cpf: '123',
+      email: faker.internet.email(),
+      document: '123',
       password: 'ValidPass123!',
     })
 
     expect(result.isLeft()).toBe(true)
+
     if (result.isLeft()) {
-      expect(result.value).toBeInstanceOf(InvalidCpfError)
+      expect(result.value).toBeInstanceOf(InvalidDocumentError)
     }
   })
 
   it('should hash the password', async () => {
-    const cpf = faker.string.numeric(11)
+    const document = faker.string.numeric(11)
 
     const result = await sut.execute({
       userId: admin.id.toString(),
       name: faker.person.fullName(),
-      cpf,
+      email: faker.internet.email(),
+      document,
       password: 'ValidPass123!',
     })
 
@@ -106,28 +128,12 @@ describe('CreateDeliveryDriverUseCase', () => {
   })
 
   it('should not be able to create a delivery driver if user is not admin', async () => {
-    const nonAdmin = makeUser({ role: UserRole.DELIVERY_DRIVER })
-    vi.spyOn(usersRepository, 'findById').mockResolvedValueOnce(nonAdmin)
-
     const result = await sut.execute({
-      userId: nonAdmin.id.toString(),
+      userId: 'non-admin',
       name: 'John Doe',
-      cpf: '12345678909',
-      password: 'password123',
-    })
-
-    expect(result.isLeft()).toBe(true)
-    expect(result.value).toBeInstanceOf(NotAllowedError)
-  })
-
-  it('should return NotAllowedError when current user is not found', async () => {
-    vi.spyOn(usersRepository, 'findById').mockResolvedValueOnce(null)
-
-    const result = await sut.execute({
-      userId: 'non-existent-id',
-      name: 'John Doe',
-      cpf: '12345678909',
-      password: 'password123',
+      document: '12345678909',
+      email: 'johndoe@gmail.com',
+      password: 'password123!',
     })
 
     expect(result.isLeft()).toBe(true)

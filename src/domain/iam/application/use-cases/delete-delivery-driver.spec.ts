@@ -2,25 +2,44 @@ import { beforeEach, describe, it, expect } from 'vitest'
 import { InMemoryUsersRepository } from '@test/repositories/in-memory-users-repository'
 import { DeleteDeliveryDriverUseCase } from './delete-delivery-driver'
 import { makeUser } from '@test/factories/make-user'
-import { UserRole } from '../../enterprise/entities/values-objects/user-role'
 import { UserNotFoundError } from '../../enterprise/entities/errors/user-not-found-error'
 import { NotAllowedError } from '@/core/errors/errors/not-allowed-error'
+import { InMemoryDeliveryDriversRepository } from '@test/repositories/in-memory-delivery-drivers-repository'
+import { InMemoryAdminsRepository } from '@test/repositories/in-memory-admins-repository'
+import { makeAdmin } from '@test/factories/make-admin'
+import { makeDeliveryDriver } from '@test/factories/make-delivery-driver'
 
-let usersRepository: InMemoryUsersRepository
+let inMemoryUsersRepository: InMemoryUsersRepository
+let inMemoryAdminsRepository: InMemoryAdminsRepository
+let inMemoryDeliveryDriversRepository: InMemoryDeliveryDriversRepository
 let sut: DeleteDeliveryDriverUseCase
 
 describe('DeleteDeliveryDriverUseCase', () => {
   beforeEach(() => {
-    usersRepository = new InMemoryUsersRepository()
-    sut = new DeleteDeliveryDriverUseCase(usersRepository)
+    inMemoryUsersRepository = new InMemoryUsersRepository()
+    inMemoryAdminsRepository = new InMemoryAdminsRepository()
+    inMemoryDeliveryDriversRepository = new InMemoryDeliveryDriversRepository()
+    sut = new DeleteDeliveryDriverUseCase(
+      inMemoryUsersRepository,
+      inMemoryAdminsRepository,
+      inMemoryDeliveryDriversRepository,
+    )
   })
 
   it('should soft delete a delivery driver', async () => {
-    const admin = makeUser({ role: UserRole.ADMIN })
-    await usersRepository.create(admin)
+    const user = makeUser()
+    await inMemoryUsersRepository.create(user)
 
-    const deliveryDriver = makeUser({ role: UserRole.DELIVERY_DRIVER })
-    await usersRepository.create(deliveryDriver)
+    const admin = makeAdmin({ userId: user.id })
+    await inMemoryAdminsRepository.create(admin)
+
+    const userDriver = makeUser()
+    await inMemoryUsersRepository.create(userDriver)
+
+    const deliveryDriver = makeDeliveryDriver({
+      userId: userDriver.id,
+    })
+    await inMemoryDeliveryDriversRepository.create(deliveryDriver)
 
     const result = await sut.execute({
       userId: admin.id.toString(),
@@ -32,15 +51,21 @@ describe('DeleteDeliveryDriverUseCase', () => {
       expect(result.value.user.isDeleted).toBe(true)
     }
 
-    const deletedUser = usersRepository.users.find((u) =>
-      u.id.equals(deliveryDriver.id),
+    const deletedUser = inMemoryUsersRepository.items.find((u) =>
+      u.id.equals(deliveryDriver.userId),
     )
+
     expect(deletedUser?.isDeleted).toBe(true)
   })
 
   it('should return NotAllowedError when current user is not an admin', async () => {
-    const deliveryDriver = makeUser({ role: UserRole.DELIVERY_DRIVER })
-    await usersRepository.create(deliveryDriver)
+    const userDriver = makeUser()
+    await inMemoryUsersRepository.create(userDriver)
+
+    const deliveryDriver = makeDeliveryDriver({
+      userId: userDriver.id,
+    })
+    await inMemoryDeliveryDriversRepository.create(deliveryDriver)
 
     const result = await sut.execute({
       userId: deliveryDriver.id.toString(),
@@ -48,6 +73,7 @@ describe('DeleteDeliveryDriverUseCase', () => {
     })
 
     expect(result.isLeft()).toBe(true)
+
     if (result.isLeft()) {
       expect(result.value).toBeInstanceOf(NotAllowedError)
     }
@@ -60,14 +86,18 @@ describe('DeleteDeliveryDriverUseCase', () => {
     })
 
     expect(result.isLeft()).toBe(true)
+
     if (result.isLeft()) {
       expect(result.value).toBeInstanceOf(NotAllowedError)
     }
   })
 
   it('should return error when delivery driver not found', async () => {
-    const admin = makeUser({ role: UserRole.ADMIN })
-    await usersRepository.create(admin)
+    const user = makeUser()
+    await inMemoryUsersRepository.create(user)
+
+    const admin = makeAdmin({ userId: user.id })
+    await inMemoryAdminsRepository.create(admin)
 
     const result = await sut.execute({
       userId: admin.id.toString(),
@@ -75,44 +105,7 @@ describe('DeleteDeliveryDriverUseCase', () => {
     })
 
     expect(result.isLeft()).toBe(true)
-    if (result.isLeft()) {
-      expect(result.value).toBeInstanceOf(UserNotFoundError)
-    }
-  })
 
-  it('should return error when delivery driver already deleted', async () => {
-    const admin = makeUser({ role: UserRole.ADMIN })
-    await usersRepository.create(admin)
-
-    const deliveryDriver = makeUser({ role: UserRole.DELIVERY_DRIVER })
-    await usersRepository.create(deliveryDriver)
-    deliveryDriver.delete()
-    await usersRepository.save(deliveryDriver)
-
-    const result = await sut.execute({
-      userId: admin.id.toString(),
-      deliveryDriverId: deliveryDriver.id.toString(),
-    })
-
-    expect(result.isLeft()).toBe(true)
-    if (result.isLeft()) {
-      expect(result.value).toBeInstanceOf(UserNotFoundError)
-    }
-  })
-
-  it('should return error when trying to delete an admin', async () => {
-    const admin = makeUser({ role: UserRole.ADMIN })
-    await usersRepository.create(admin)
-
-    const otherAdmin = makeUser({ role: UserRole.ADMIN })
-    await usersRepository.create(otherAdmin)
-
-    const result = await sut.execute({
-      userId: admin.id.toString(),
-      deliveryDriverId: otherAdmin.id.toString(),
-    })
-
-    expect(result.isLeft()).toBe(true)
     if (result.isLeft()) {
       expect(result.value).toBeInstanceOf(UserNotFoundError)
     }

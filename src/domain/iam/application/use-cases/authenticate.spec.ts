@@ -18,24 +18,24 @@ describe('AuthenticateUseCase', () => {
   })
 
   it('should authenticate a user with valid credentials', async () => {
-    const cpf = faker.string.numeric(11)
-    const user = makeUser({ cpf })
+    const document = faker.string.numeric(11)
+    const user = makeUser({ login: document })
     await usersRepository.create(user)
 
     const result = await sut.execute({
-      cpf,
+      login: document,
       password: DEFAULT_PASSWORD,
     })
 
     expect(result.isRight()).toBe(true)
     if (result.isRight()) {
-      expect(result.value.user.cpf).toBe(cpf)
+      expect(result.value.user.login).toBe(document)
     }
   })
 
   it('should return error for invalid CPF', async () => {
     const result = await sut.execute({
-      cpf: faker.string.numeric(11),
+      login: faker.string.numeric(11),
       password: DEFAULT_PASSWORD,
     })
 
@@ -46,12 +46,12 @@ describe('AuthenticateUseCase', () => {
   })
 
   it('should return error for invalid password', async () => {
-    const cpf = faker.string.numeric(11)
-    const user = makeUser({ cpf })
+    const document = faker.string.numeric(11)
+    const user = makeUser({ login: document })
     await usersRepository.create(user)
 
     const result = await sut.execute({
-      cpf,
+      login: document,
       password: 'WrongPass123!',
     })
 

@@ -1,34 +1,43 @@
 import { Entity } from '@/core/entities/entity'
 import type { UniqueEntityId } from '@/core/entities/unique-entity-id'
-import { Password } from './values-objects/password'
 import type { Optional } from '@/core/types/optional'
 
-export interface UserProps {
-  login: string
-  password: Password
+export interface AdminProps {
+  name: string
+  email: string
+  document: string
+  userId: UniqueEntityId
   createdAt: Date
   updatedAt?: Date | null
   deletedAt?: Date | null
 }
 
-export class User extends Entity<UserProps> {
-  get login(): string {
-    return this.props.login
+export class Admin extends Entity<AdminProps> {
+  get name() {
+    return this.props.name
   }
 
-  get password(): Password {
-    return this.props.password
+  get email() {
+    return this.props.email
   }
 
-  get createdAt(): Date {
+  get document() {
+    return this.props.document
+  }
+
+  get userId() {
+    return this.props.userId
+  }
+
+  get createdAt() {
     return this.props.createdAt
   }
 
-  get updatedAt(): Date | undefined | null {
+  get updatedAt() {
     return this.props.updatedAt
   }
 
-  get deletedAt(): Date | undefined | null {
+  get deletedAt() {
     return this.props.deletedAt
   }
 
@@ -46,17 +55,11 @@ export class User extends Entity<UserProps> {
     this.touch()
   }
 
-  set password(password: Password) {
-    this.props.password = password
-
-    this.touch()
-  }
-
   static create(
-    props: Optional<UserProps, 'createdAt' | 'updatedAt' | 'deletedAt'>,
+    props: Optional<AdminProps, 'createdAt' | 'updatedAt' | 'deletedAt'>,
     id?: UniqueEntityId,
-  ): User {
-    return new User(
+  ): Admin {
+    return new Admin(
       {
         ...props,
         createdAt: props.createdAt ?? new Date(),

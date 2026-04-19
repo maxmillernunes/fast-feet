@@ -23,7 +23,7 @@ export class PrismaUsersRepository implements UsersRepository {
     return PrismaUserMapper.toDomain(user)
   }
 
-  async findByCpf(cpf: string): Promise<User | null> {
+  async findByLogin(login: string): Promise<User | null> {
     throw new Error('Method not implemented.')
   }
 

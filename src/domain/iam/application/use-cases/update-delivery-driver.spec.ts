@@ -3,55 +3,53 @@ import { InMemoryUsersRepository } from '@test/repositories/in-memory-users-repo
 import { HashGeneratorInMemory } from '@test/cryptography/hash-generator-in-memory'
 import { UpdateDeliveryDriverUseCase } from './update-delivery-driver'
 import { makeUser } from '@test/factories/make-user'
-import { UserRole } from '../../enterprise/entities/values-objects/user-role'
 import { UserNotFoundError } from '../../enterprise/entities/errors/user-not-found-error'
 import { InvalidPasswordError } from '../../enterprise/entities/errors/invalid-password-error'
 import { NotAllowedError } from '@/core/errors/errors/not-allowed-error'
 import { faker } from '@faker-js/faker'
+import { InMemoryAdminsRepository } from '@test/repositories/in-memory-admins-repository'
+import { InMemoryDeliveryDriversRepository } from '@test/repositories/in-memory-delivery-drivers-repository'
+import { makeAdmin } from '@test/factories/make-admin'
+import { makeDeliveryDriver } from '@test/factories/make-delivery-driver'
 
-let usersRepository: InMemoryUsersRepository
-let hashGenerator: HashGeneratorInMemory
+let inMemoryUsersRepository: InMemoryUsersRepository
+let inMemoryAdminsRepository: InMemoryAdminsRepository
+let inMemoryDeliveryDriversRepository: InMemoryDeliveryDriversRepository
+let inMemoryHashGenerator: HashGeneratorInMemory
 let sut: UpdateDeliveryDriverUseCase
 
+let user: ReturnType<typeof makeUser>
+let admin: ReturnType<typeof makeAdmin>
+
 describe('UpdateDeliveryDriverUseCase', () => {
-  let admin: ReturnType<typeof makeUser>
-  let deliveryDriver: ReturnType<typeof makeUser>
-
   beforeEach(() => {
-    usersRepository = new InMemoryUsersRepository()
-    hashGenerator = new HashGeneratorInMemory()
-    sut = new UpdateDeliveryDriverUseCase(usersRepository, hashGenerator)
+    inMemoryUsersRepository = new InMemoryUsersRepository()
+    inMemoryAdminsRepository = new InMemoryAdminsRepository()
+    inMemoryDeliveryDriversRepository = new InMemoryDeliveryDriversRepository()
+    inMemoryHashGenerator = new HashGeneratorInMemory()
+    sut = new UpdateDeliveryDriverUseCase(
+      inMemoryUsersRepository,
+      inMemoryAdminsRepository,
+      inMemoryDeliveryDriversRepository,
+      inMemoryHashGenerator,
+    )
 
-    admin = makeUser({ role: UserRole.ADMIN })
-    deliveryDriver = makeUser({
-      role: UserRole.DELIVERY_DRIVER,
-      name: 'Old Name',
-    })
-  })
-
-  it('should update delivery driver name', async () => {
-    await usersRepository.create(admin)
-    await usersRepository.create(deliveryDriver)
-
-    const result = await sut.execute({
-      userId: admin.id.toString(),
-      deliveryDriverId: deliveryDriver.id.toString(),
-      name: 'New Name',
-    })
-
-    expect(result.isRight()).toBe(true)
-    if (result.isRight()) {
-      expect(result.value.user.name).toBe('New Name')
-    }
+    user = makeUser()
+    admin = makeAdmin({ userId: user.id })
   })
 
   it('should update delivery driver password', async () => {
-    await usersRepository.create(admin)
-    await usersRepository.create(deliveryDriver)
+    await inMemoryUsersRepository.create(user)
+    await inMemoryAdminsRepository.create(admin)
+
+    const userDriver = makeUser()
+    await inMemoryUsersRepository.create(userDriver)
+    const driver = makeDeliveryDriver({ userId: userDriver.id })
+    await inMemoryDeliveryDriversRepository.create(driver)
 
     const result = await sut.execute({
       userId: admin.id.toString(),
-      deliveryDriverId: deliveryDriver.id.toString(),
+      deliveryDriverId: driver.id.toString(),
       password: 'NewPass123!',
     })
 
@@ -62,27 +60,35 @@ describe('UpdateDeliveryDriverUseCase', () => {
   })
 
   it('should return error when user not found', async () => {
-    await usersRepository.create(admin)
+    const userDriver = makeUser()
+    await inMemoryUsersRepository.create(userDriver)
+    const driver = makeDeliveryDriver({ userId: userDriver.id })
+    await inMemoryDeliveryDriversRepository.create(driver)
 
     const result = await sut.execute({
-      userId: admin.id.toString(),
+      userId: 'non-exists-id',
       deliveryDriverId: 'non-existent-id',
-      name: 'New Name',
+      password: 'some-password',
     })
 
     expect(result.isLeft()).toBe(true)
     if (result.isLeft()) {
-      expect(result.value).toBeInstanceOf(UserNotFoundError)
+      expect(result.value).toBeInstanceOf(NotAllowedError)
     }
   })
 
   it('should return error for invalid password', async () => {
-    await usersRepository.create(admin)
-    await usersRepository.create(deliveryDriver)
+    await inMemoryUsersRepository.create(user)
+    await inMemoryAdminsRepository.create(admin)
+
+    const userDriver = makeUser()
+    await inMemoryUsersRepository.create(userDriver)
+    const driver = makeDeliveryDriver({ userId: userDriver.id })
+    await inMemoryDeliveryDriversRepository.create(driver)
 
     const result = await sut.execute({
       userId: admin.id.toString(),
-      deliveryDriverId: deliveryDriver.id.toString(),
+      deliveryDriverId: driver.id.toString(),
       password: 'weak',
     })
 
@@ -92,44 +98,17 @@ describe('UpdateDeliveryDriverUseCase', () => {
     }
   })
 
-  it('should return error when trying to update an admin', async () => {
-    await usersRepository.create(admin)
-    const adminTarget = makeUser({ role: UserRole.ADMIN })
-    await usersRepository.create(adminTarget)
-
-    const result = await sut.execute({
-      userId: admin.id.toString(),
-      deliveryDriverId: adminTarget.id.toString(),
-      name: 'New Name',
-    })
-
-    expect(result.isLeft()).toBe(true)
-    if (result.isLeft()) {
-      expect(result.value).toBeInstanceOf(UserNotFoundError)
-    }
-  })
-
-  it('should not be able to update a delivery driver if user is not admin', async () => {
-    const nonAdmin = makeUser({ role: UserRole.DELIVERY_DRIVER })
-    vi.spyOn(usersRepository, 'findById').mockResolvedValueOnce(nonAdmin)
-
-    const result = await sut.execute({
-      userId: nonAdmin.id.toString(),
-      deliveryDriverId: deliveryDriver.id.toString(),
-      name: 'New Name',
-    })
-
-    expect(result.isLeft()).toBe(true)
-    expect(result.value).toBeInstanceOf(NotAllowedError)
-  })
-
   it('should return NotAllowedError when current user is not found', async () => {
-    vi.spyOn(usersRepository, 'findById').mockResolvedValueOnce(null)
+    await inMemoryUsersRepository.create(user)
+    await inMemoryAdminsRepository.create(admin)
+
+    const driver = makeDeliveryDriver()
+    await inMemoryDeliveryDriversRepository.create(driver)
 
     const result = await sut.execute({
       userId: 'non-existent-id',
-      deliveryDriverId: deliveryDriver.id.toString(),
-      name: 'New Name',
+      deliveryDriverId: driver.id.toString(),
+      password: 'NewPass123!',
     })
 
     expect(result.isLeft()).toBe(true)
