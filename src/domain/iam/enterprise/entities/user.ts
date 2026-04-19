@@ -10,8 +10,8 @@ export interface UserProps {
   role: UserRole
   password: Password
   createdAt: Date
-  updatedAt?: Date
-  deletedAt?: Date
+  updatedAt?: Date | null
+  deletedAt?: Date | null
 }
 
 export class User extends Entity<UserProps> {
@@ -35,11 +35,11 @@ export class User extends Entity<UserProps> {
     return this.props.createdAt
   }
 
-  get updatedAt(): Date | undefined {
+  get updatedAt(): Date | undefined | null {
     return this.props.updatedAt
   }
 
-  get deletedAt(): Date | undefined {
+  get deletedAt(): Date | undefined | null {
     return this.props.deletedAt
   }
 
