@@ -15,11 +15,42 @@ datasource db {
 
 model User {
   id        String    @id @default(uuid())
-  name      String
+  login     String
   password  String
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  admins          Admin[]
+  deliveryDrivers DeliveryDriver[]
+
+  @@map("users")
+}
+
+model Admin {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  name      String
   document  String
+  email     String    @unique()
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime? @updatedAt @map("updated_at")
 
-  @@map("users")
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("admins")
+}
+
+model DeliveryDriver {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  name      String
+  document  String
+  email     String    @unique()
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("delivery-drivers")
 }
