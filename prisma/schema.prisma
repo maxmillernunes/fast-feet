@@ -13,44 +13,21 @@ datasource db {
   provider = "postgresql"
 }
 
+enum UserRole {
+  DRIVER
+  ADMIN
+}
+
 model User {
   id        String    @id @default(uuid())
-  login     String
+  name      String
+  document  String    @unique()
+  email     String    @unique()
   password  String
+  role      UserRole  @default(DRIVER)
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime? @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
-  admins          Admin[]
-  deliveryDrivers DeliveryDriver[]
-
   @@map("users")
-}
-
-model Admin {
-  id        String    @id @default(uuid())
-  userId    String    @map("user_id")
-  name      String
-  document  String
-  email     String    @unique()
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime? @updatedAt @map("updated_at")
-
-  user User @relation(fields: [userId], references: [id])
-
-  @@map("admins")
-}
-
-model DeliveryDriver {
-  id        String    @id @default(uuid())
-  userId    String    @map("user_id")
-  name      String
-  document  String
-  email     String    @unique()
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime? @updatedAt @map("updated_at")
-
-  user User @relation(fields: [userId], references: [id])
-
-  @@map("delivery-drivers")
 }
