@@ -1,5 +1,5 @@
-export class UserNotFoundError extends Error {
+export class DriverNotFoundError extends Error {
   constructor(identifier: string) {
-    super(`User not found: ${identifier}`)
+    super(`Driver not found: ${identifier}`)
   }
 }

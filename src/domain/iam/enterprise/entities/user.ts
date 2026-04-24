@@ -3,21 +3,41 @@ import type { UniqueEntityId } from '@/core/entities/unique-entity-id'
 import { Password } from './values-objects/password'
 import type { Optional } from '@/core/types/optional'
 
+export enum UserRole {
+  ADMIN = 'ADMIN',
+  DRIVER = 'DRIVER',
+}
+
 export interface UserProps {
-  login: string
+  document: string
   password: Password
+  email: string
+  name: string
+  role: UserRole
   createdAt: Date
   updatedAt?: Date | null
   deletedAt?: Date | null
 }
 
 export class User extends Entity<UserProps> {
-  get login(): string {
-    return this.props.login
+  get document(): string {
+    return this.props.document
   }
 
   get password(): Password {
     return this.props.password
+  }
+
+  get email(): string {
+    return this.props.email
+  }
+
+  get name(): string {
+    return this.props.name
+  }
+
+  get role(): string {
+    return this.props.role
   }
 
   get createdAt(): Date {

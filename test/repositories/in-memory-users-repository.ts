@@ -1,5 +1,5 @@
 import type { PaginationParams } from '@/core/repositories /pagination-params'
-import type { UsersRepository } from '@/domain/iam/application/repositories/users-repository'
+import { UsersRepository } from '@/domain/iam/application/repositories/users-repository'
 import { User } from '@/domain/iam/enterprise/entities/user'
 
 export class InMemoryUsersRepository implements UsersRepository {
@@ -12,7 +12,11 @@ export class InMemoryUsersRepository implements UsersRepository {
   }
 
   async findByLogin(login: string): Promise<User | null> {
-    return this.items.find((u) => u.login === login && !u.isDeleted) ?? null
+    return this.items.find((u) => u.document === login && !u.isDeleted) ?? null
+  }
+
+  async findByEmail(email: string): Promise<User | null> {
+    return this.items.find((u) => u.email === email && !u.isDeleted) ?? null
   }
 
   async findMany({ page, perPage }: PaginationParams): Promise<User[]> {

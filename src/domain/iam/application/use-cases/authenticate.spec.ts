@@ -1,26 +1,26 @@
 import { beforeEach, describe, it, expect } from 'vitest'
-import { InMemoryUsersRepository } from '@test/repositories/in-memory-users-repository'
 import { HashComparerInMemory } from '@test/cryptography/hash-comparer-in-memory'
-import { makeUser, DEFAULT_PASSWORD } from '@test/factories/make-user'
-import { AuthenticateUseCase } from './authenticate'
 import { InvalidCredentialsError } from '../../enterprise/entities/errors/invalid-credentials-error'
 import { faker } from '@faker-js/faker'
+import { AuthenticateUseCase } from './authenticate'
+import { InMemoryUsersRepository } from '@test/repositories/in-memory-users-repository'
+import { DEFAULT_PASSWORD, makeUser } from '@test/factories/make-user'
 
-let usersRepository: InMemoryUsersRepository
+let adminsRepository: InMemoryUsersRepository
 let hashComparer: HashComparerInMemory
 let sut: AuthenticateUseCase
 
 describe('AuthenticateUseCase', () => {
   beforeEach(() => {
-    usersRepository = new InMemoryUsersRepository()
+    adminsRepository = new InMemoryUsersRepository()
     hashComparer = new HashComparerInMemory()
-    sut = new AuthenticateUseCase(usersRepository, hashComparer)
+    sut = new AuthenticateUseCase(adminsRepository, hashComparer)
   })
 
-  it('should authenticate a user with valid credentials', async () => {
+  it('should authenticate a admin with valid credentials', async () => {
     const document = faker.string.numeric(11)
-    const user = makeUser({ login: document })
-    await usersRepository.create(user)
+    const user = makeUser({ document: document })
+    await adminsRepository.create(user)
 
     const result = await sut.execute({
       login: document,
@@ -29,7 +29,7 @@ describe('AuthenticateUseCase', () => {
 
     expect(result.isRight()).toBe(true)
     if (result.isRight()) {
-      expect(result.value.user.login).toBe(document)
+      expect(result.value.admin.document).toBe(document)
     }
   })
 
@@ -47,8 +47,8 @@ describe('AuthenticateUseCase', () => {
 
   it('should return error for invalid password', async () => {
     const document = faker.string.numeric(11)
-    const user = makeUser({ login: document })
-    await usersRepository.create(user)
+    const user = makeUser({ document: document })
+    await adminsRepository.create(user)
 
     const result = await sut.execute({
       login: document,

@@ -1,41 +1,22 @@
 import { Either, left, right } from '@/core/either'
-import { NotAllowedError } from '@/core/errors/errors/not-allowed-error'
-import { UserNotFoundError } from '../../enterprise/entities/errors/user-not-found-error'
-import { AdminsRepository } from '../repositories/admins-repository'
-import { DeliveryDriversRepository } from '../repositories/delivery-drivers-repository'
-import type { DeliveryDriver } from '../../enterprise/entities/delivery-driver'
+import { DriverNotFoundError } from '../../enterprise/entities/errors/user-not-found-error'
+import { UsersRepository } from '../repositories/users-repository'
+import type { User } from '../../enterprise/entities/user'
 
-interface GetDeliveryDriverRequest {
-  userId: string
-  deliveryDriverId: string
+interface GetUserRequest {
+  driverId: string
 }
 
-type GetDeliveryDriverResponse = Either<
-  NotAllowedError | UserNotFoundError,
-  { driver: DeliveryDriver }
->
+type GetUserResponse = Either<DriverNotFoundError, { driver: User }>
 
-export class GetDeliveryDriverUseCase {
-  constructor(
-    private adminsRepository: AdminsRepository,
-    private deliveryDriversRepository: DeliveryDriversRepository,
-  ) {}
+export class GetUserUseCase {
+  constructor(private usersRepository: UsersRepository) {}
 
-  async execute({
-    userId,
-    deliveryDriverId,
-  }: GetDeliveryDriverRequest): Promise<GetDeliveryDriverResponse> {
-    const isAdmin = await this.adminsRepository.findById(userId)
-
-    if (!isAdmin) {
-      return left(new NotAllowedError())
-    }
-
-    const driver =
-      await this.deliveryDriversRepository.findById(deliveryDriverId)
+  async execute({ driverId }: GetUserRequest): Promise<GetUserResponse> {
+    const driver = await this.usersRepository.findById(driverId)
 
     if (!driver) {
-      return left(new UserNotFoundError(deliveryDriverId))
+      return left(new DriverNotFoundError(driverId))
     }
 
     return right({ driver })

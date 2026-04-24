@@ -1,55 +1,36 @@
 import { Either, left, right } from '@/core/either'
 import { NotAllowedError } from '@/core/errors/errors/not-allowed-error'
-import { UserNotFoundError } from '../../enterprise/entities/errors/user-not-found-error'
+import { DriverNotFoundError } from '../../enterprise/entities/errors/user-not-found-error'
 import { InvalidPasswordError } from '../../enterprise/entities/errors/invalid-password-error'
 import { Password } from '../../enterprise/entities/values-objects/password'
-import { UsersRepository } from '../repositories/users-repository'
 import { HashGenerator } from '../cryptography/hash-generator'
-import { User } from '../../enterprise/entities/user'
-import { AdminsRepository } from '../repositories/admins-repository'
-import { DeliveryDriversRepository } from '../repositories/delivery-drivers-repository'
+import { UsersRepository } from '../repositories/users-repository'
+import type { User } from '../../enterprise/entities/user'
 
-interface UpdateDeliveryDriverRequest {
+interface UpdateUserRequest {
   userId: string
-  deliveryDriverId: string
   password: string
 }
 
-type UpdateDeliveryDriverResponse = Either<
-  UserNotFoundError | InvalidPasswordError | NotAllowedError,
-  { user: User }
+type UpdateUserResponse = Either<
+  DriverNotFoundError | InvalidPasswordError | NotAllowedError,
+  { driver: User }
 >
 
-export class UpdateDeliveryDriverUseCase {
+export class UpdateUserUseCase {
   constructor(
     private usersRepository: UsersRepository,
-    private adminsRepository: AdminsRepository,
-    private deliveryDriversRepository: DeliveryDriversRepository,
     private hashGenerator: HashGenerator,
   ) {}
 
   async execute({
     userId,
-    deliveryDriverId,
     password,
-  }: UpdateDeliveryDriverRequest): Promise<UpdateDeliveryDriverResponse> {
-    const isAdmin = await this.adminsRepository.findById(userId)
-
-    if (!isAdmin) {
-      return left(new NotAllowedError())
-    }
-
-    const driver =
-      await this.deliveryDriversRepository.findById(deliveryDriverId)
+  }: UpdateUserRequest): Promise<UpdateUserResponse> {
+    const driver = await this.usersRepository.findById(userId)
 
     if (!driver) {
-      return left(new UserNotFoundError(deliveryDriverId))
-    }
-
-    const user = await this.usersRepository.findById(driver.userId.toString())
-
-    if (!user) {
-      return left(new UserNotFoundError(deliveryDriverId))
+      return left(new DriverNotFoundError(userId))
     }
 
     const passwordResult = Password.createFromText(password)
@@ -58,11 +39,11 @@ export class UpdateDeliveryDriverUseCase {
       return left(passwordResult.value)
     }
 
-    const hashedPassword = await this.hashGenerator.generate(password)
-    user.password = Password.create(hashedPassword)
+    const hashedPassword = await this.hashGenerator.hash(password)
+    driver.password = Password.create(hashedPassword)
 
-    await this.usersRepository.save(user)
+    await this.usersRepository.save(driver)
 
-    return right({ user })
+    return right({ driver })
   }
 }
