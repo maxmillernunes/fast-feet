@@ -1,22 +1,37 @@
-import { User } from '@/domain/iam/enterprise/entities/user'
-import type { User as PrismaUser } from '../client/client'
-import { UserRole } from '@/domain/iam/enterprise/entities/values-objects/user-role'
-import { Password } from '@/domain/iam/enterprise/entities/values-objects/password'
+import { User, UserRole } from '@/domain/iam/enterprise/entities/user'
+import {
+  Prisma,
+  User as PrismaUser,
+  UserRole as PrismaUserRole,
+} from '../client/client'
 import { UniqueEntityId } from '@/core/entities/unique-entity-id'
+import { Password } from '@/domain/iam/enterprise/entities/values-objects/password'
 
 export class PrismaUserMapper {
   static toDomain(raw: PrismaUser): User {
     return User.create(
       {
+        document: raw.document,
+        email: raw.email,
         name: raw.name,
-        cpf: raw.document,
-        password: Password.createWithoutValidation(raw.password),
-        role: UserRole.ADMIN,
+        password: Password.create(raw.password),
         createdAt: raw.createdAt,
-        deletedAt: raw.updatedAt,
+        deletedAt: raw.deletedAt,
         updatedAt: raw.updatedAt,
+        role: raw.role as UserRole,
       },
       new UniqueEntityId(raw.id),
     )
+  }
+
+  static toPrisma(user: User): Prisma.UserUncheckedCreateInput {
+    return {
+      id: user.id.toString(),
+      document: user.document,
+      email: user.email,
+      name: user.name,
+      password: user.password.value,
+      role: user.role as PrismaUserRole,
+    }
   }
 }

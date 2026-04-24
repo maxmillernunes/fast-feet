@@ -1,11 +1,21 @@
-import { BadRequestException, Body, Controller, Post } from '@nestjs/common'
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Post,
+  UseGuards,
+} from '@nestjs/common'
 import z from 'zod'
 import { ZodValidationPipe } from '../pipes/zod-validation-pipes'
-import { PrismaService } from '@/infra/database/prisma/prisma.service'
-import { hash } from 'bcrypt'
+import { CreateAccountUseCase } from '@/domain/iam/application/use-cases/create-account'
+import { UserRole } from '@/domain/iam/enterprise/entities/user'
+import { JwtAuthGuard } from '@/infra/auth/jwt-auth.guard'
+import { CurrentUser } from '@/infra/auth/current-user-decorator'
+import type { UserPayload } from '@/infra/auth/jwt.strategy'
 
 const createAccountBodySchema = z.object({
   name: z.string(),
+  email: z.email(),
   document: z
     .string()
     .transform((v) => v.replace(/\D/g, '')) // Remove caracteres não numéricos
@@ -26,6 +36,7 @@ const createAccountBodySchema = z.object({
       return true
     }, 'Document inválido'),
   password: z.string(),
+  role: z.enum(UserRole),
 })
 
 const bodyValidationSchema = new ZodValidationPipe(createAccountBodySchema)
@@ -33,29 +44,28 @@ const bodyValidationSchema = new ZodValidationPipe(createAccountBodySchema)
 type CreateAccountBodySchema = z.infer<typeof createAccountBodySchema>
 
 @Controller('/accounts')
+@UseGuards(JwtAuthGuard)
 export class CreateAccountController {
-  constructor(private prisma: PrismaService) {}
+  constructor(private createAccount: CreateAccountUseCase) {}
 
   @Post()
   async handle(@Body(bodyValidationSchema) body: CreateAccountBodySchema) {
-    const { name, document, password } = body
+    const { document, email, name, password, role } = body
 
-    const existingUser = await this.prisma.user.findFirst({
-      where: { document },
+    const result = await this.createAccount.execute({
+      document,
+      email,
+      name,
+      password,
+      role,
     })
 
-    if (existingUser) {
-      throw new BadRequestException('User with this document already exists')
+    if (result.isLeft()) {
+      const { message } = result.value
+
+      throw new BadRequestException({
+        message,
+      })
     }
-
-    const passwordHash = await hash(password, 10)
-
-    await this.prisma.user.create({
-      data: {
-        name,
-        document,
-        password: passwordHash,
-      },
-    })
   }
 }

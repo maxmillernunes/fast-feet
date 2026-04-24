@@ -25,8 +25,8 @@ export class AuthenticateController {
   async handle(@Body(bodyValidationSchema) body: AuthenticateBodySchema) {
     const { document, password } = body
 
-    const user = await this.prisma.user.findFirst({
-      where: { document },
+    const user = await this.prisma.user.findUnique({
+      where: { document: document },
     })
 
     if (!user) {

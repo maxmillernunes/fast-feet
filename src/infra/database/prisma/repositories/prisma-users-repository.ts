@@ -24,7 +24,31 @@ export class PrismaUsersRepository implements UsersRepository {
   }
 
   async findByLogin(login: string): Promise<User | null> {
-    throw new Error('Method not implemented.')
+    const user = await this.prisma.user.findUnique({
+      where: {
+        document: login,
+      },
+    })
+
+    if (!user) {
+      return null
+    }
+
+    return PrismaUserMapper.toDomain(user)
+  }
+
+  async findByEmail(email: string): Promise<User | null> {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        email,
+      },
+    })
+
+    if (!user) {
+      return null
+    }
+
+    return PrismaUserMapper.toDomain(user)
   }
 
   async findMany(params: PaginationParams): Promise<User[]> {
@@ -36,7 +60,9 @@ export class PrismaUsersRepository implements UsersRepository {
   }
 
   async create(user: User): Promise<void> {
-    throw new Error('Method not implemented.')
+    const data = PrismaUserMapper.toPrisma(user)
+
+    await this.prisma.user.create({ data })
   }
 
   async save(user: User): Promise<void> {
