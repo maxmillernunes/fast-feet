@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Body,
+  ConflictException,
   Controller,
   Post,
   UseGuards,
@@ -10,8 +11,9 @@ import { ZodValidationPipe } from '../pipes/zod-validation-pipes'
 import { CreateAccountUseCase } from '@/domain/iam/application/use-cases/create-account'
 import { UserRole } from '@/domain/iam/enterprise/entities/user'
 import { JwtAuthGuard } from '@/infra/auth/jwt-auth.guard'
-import { CurrentUser } from '@/infra/auth/current-user-decorator'
-import type { UserPayload } from '@/infra/auth/jwt.strategy'
+import { InvalidDocumentError } from '@/domain/iam/enterprise/entities/errors/invalid-document-error'
+import { AccountAlreadyExistsError } from '@/domain/iam/application/use-cases/errors/account-already-exists-error'
+import { InvalidPasswordError } from '@/domain/iam/enterprise/entities/errors/invalid-password-error'
 
 const createAccountBodySchema = z.object({
   name: z.string(),
@@ -44,7 +46,6 @@ const bodyValidationSchema = new ZodValidationPipe(createAccountBodySchema)
 type CreateAccountBodySchema = z.infer<typeof createAccountBodySchema>
 
 @Controller('/accounts')
-@UseGuards(JwtAuthGuard)
 export class CreateAccountController {
   constructor(private createAccount: CreateAccountUseCase) {}
 
@@ -61,11 +62,16 @@ export class CreateAccountController {
     })
 
     if (result.isLeft()) {
-      const { message } = result.value
+      const error = result.value
 
-      throw new BadRequestException({
-        message,
-      })
+      switch (error.constructor) {
+        case InvalidDocumentError || InvalidPasswordError:
+          throw new BadRequestException(error.message)
+        case AccountAlreadyExistsError:
+          throw new ConflictException(error.message)
+        default:
+          throw new BadRequestException(error.message)
+      }
     }
   }
 }

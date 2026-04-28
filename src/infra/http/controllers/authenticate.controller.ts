@@ -1,12 +1,18 @@
-import { Body, Controller, Post, UnauthorizedException } from '@nestjs/common'
-import { JwtService } from '@nestjs/jwt'
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Post,
+  UnauthorizedException,
+} from '@nestjs/common'
 import z from 'zod'
 import { ZodValidationPipe } from '../pipes/zod-validation-pipes'
-import { PrismaService } from '@/infra/database/prisma/prisma.service'
-import { compare } from 'bcrypt'
+import { AuthenticateUseCase } from '@/domain/iam/application/use-cases/authenticate'
+import { WrongCredentialsError } from '@/domain/iam/application/use-cases/errors/wrong-credentials-error'
+import { Public } from '@/infra/auth/public'
 
 const authenticateBodySchema = z.object({
-  document: z.string().min(11),
+  login: z.string().min(11),
   password: z.string().min(6),
 })
 
@@ -15,32 +21,32 @@ const bodyValidationSchema = new ZodValidationPipe(authenticateBodySchema)
 type AuthenticateBodySchema = z.infer<typeof authenticateBodySchema>
 
 @Controller('/sessions')
+@Public()
 export class AuthenticateController {
-  constructor(
-    private jwt: JwtService,
-    private prisma: PrismaService,
-  ) {}
+  constructor(private authenticate: AuthenticateUseCase) {}
 
   @Post()
   async handle(@Body(bodyValidationSchema) body: AuthenticateBodySchema) {
-    const { document, password } = body
+    const { login, password } = body
 
-    const user = await this.prisma.user.findUnique({
-      where: { document: document },
+    const result = await this.authenticate.execute({
+      login,
+      password,
     })
 
-    if (!user) {
-      throw new UnauthorizedException('User credentials do not match')
+    if (result.isLeft()) {
+      const error = result.value
+
+      switch (error.constructor) {
+        case WrongCredentialsError:
+          throw new UnauthorizedException(error.message)
+        default:
+          throw new BadRequestException(error.message)
+      }
     }
 
-    const isPasswordValid = await compare(password, user.password)
+    const { access_token } = result.value
 
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('User credentials do not match')
-    }
-
-    const accessToken = await this.jwt.signAsync({ sub: user.id })
-
-    return { access_token: accessToken }
+    return { access_token }
   }
 }
