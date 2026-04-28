@@ -1,15 +1,16 @@
 import { beforeEach, describe, it, expect } from 'vitest'
-import { HashGeneratorInMemory } from '@test/cryptography/hash-generator-in-memory'
-import { AccountAlreadyExistsError } from '../../enterprise/entities/errors/account-already-exists-error'
+import { FakeHasher } from '@test/cryptography/fake-hasher'
+import { AccountAlreadyExistsError } from './errors/account-already-exists-error'
 import { InvalidPasswordError } from '../../enterprise/entities/errors/invalid-password-error'
 import { faker } from '@faker-js/faker'
 import { InMemoryUsersRepository } from '@test/repositories/in-memory-users-repository'
 import { makeUser } from '@test/factories/make-user'
 import { InvalidDocumentError } from '../../enterprise/entities/errors/invalid-document-error'
 import { CreateAccountUseCase } from './create-account'
+import { UserRole } from '../../enterprise/entities/user'
 
 let inMemoryUsersRepository: InMemoryUsersRepository
-let inMemoryHashGenerator: HashGeneratorInMemory
+let fakeHasher: FakeHasher
 let sut: CreateAccountUseCase
 
 describe('CreateAccountUseCase', () => {
@@ -17,11 +18,8 @@ describe('CreateAccountUseCase', () => {
 
   beforeEach(() => {
     inMemoryUsersRepository = new InMemoryUsersRepository()
-    inMemoryHashGenerator = new HashGeneratorInMemory()
-    sut = new CreateAccountUseCase(
-      inMemoryUsersRepository,
-      inMemoryHashGenerator,
-    )
+    fakeHasher = new FakeHasher()
+    sut = new CreateAccountUseCase(inMemoryUsersRepository, fakeHasher)
 
     user = makeUser()
     inMemoryUsersRepository.items.push(user)
@@ -33,6 +31,7 @@ describe('CreateAccountUseCase', () => {
       document: faker.string.numeric(11),
       email: faker.internet.email(),
       password: 'ValidPass123!',
+      role: UserRole.ADMIN,
     })
 
     expect(result.isRight()).toBe(true)
@@ -56,6 +55,7 @@ describe('CreateAccountUseCase', () => {
       document,
       password: 'ValidPass123!',
       email: faker.internet.email(),
+      role: UserRole.ADMIN,
     })
 
     expect(result.isLeft()).toBe(true)
@@ -71,6 +71,7 @@ describe('CreateAccountUseCase', () => {
       document: faker.string.numeric(11),
       email: faker.internet.email(),
       password: 'weak',
+      role: UserRole.ADMIN,
     })
 
     expect(result.isLeft()).toBe(true)
@@ -86,6 +87,7 @@ describe('CreateAccountUseCase', () => {
       email: faker.internet.email(),
       document: '123',
       password: 'ValidPass123!',
+      role: UserRole.ADMIN,
     })
 
     expect(result.isLeft()).toBe(true)
@@ -103,6 +105,7 @@ describe('CreateAccountUseCase', () => {
       email: faker.internet.email(),
       document,
       password: 'ValidPass123!',
+      role: UserRole.ADMIN,
     })
 
     expect(result.isRight()).toBe(true)

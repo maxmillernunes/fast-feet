@@ -1,41 +1,52 @@
 import { Either, left, right } from '@/core/either'
-import { InvalidCredentialsError } from '../../enterprise/entities/errors/invalid-credentials-error'
+import { WrongCredentialsError } from './errors/wrong-credentials-error'
 import { HashComparer } from '../cryptography/hash-comparer'
-import type { UsersRepository } from '../repositories/users-repository'
+import { Encrypter } from '../cryptography/encrypter'
+import { UsersRepository } from '../repositories/users-repository'
 import type { User } from '../../enterprise/entities/user'
+import { Injectable } from '@nestjs/common'
 
 interface AuthenticateRequest {
   login: string
   password: string
 }
 
-type AuthenticateResponse = Either<InvalidCredentialsError, { admin: User }>
+type AuthenticateResponse = Either<
+  WrongCredentialsError,
+  { user: User; access_token: string }
+>
 
+@Injectable()
 export class AuthenticateUseCase {
   constructor(
-    private adminsRepository: UsersRepository,
+    private usersRepository: UsersRepository,
     private hashComparer: HashComparer,
+    private encrypter: Encrypter,
   ) {}
 
   async execute({
     login,
     password,
   }: AuthenticateRequest): Promise<AuthenticateResponse> {
-    const admin = await this.adminsRepository.findByLogin(login)
+    const user = await this.usersRepository.findByLogin(login)
 
-    if (!admin) {
-      return left(new InvalidCredentialsError())
+    if (!user) {
+      return left(new WrongCredentialsError())
     }
 
     const isPasswordValid = await this.hashComparer.compare(
       password,
-      admin.password.value,
+      user.password.value,
     )
 
     if (!isPasswordValid) {
-      return left(new InvalidCredentialsError())
+      return left(new WrongCredentialsError())
     }
 
-    return right({ admin })
+    const access_token = await this.encrypter.encrypt({
+      sub: user.id.toString(),
+    })
+
+    return right({ user, access_token })
   }
 }

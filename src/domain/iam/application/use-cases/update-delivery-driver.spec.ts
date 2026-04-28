@@ -1,5 +1,5 @@
 import { beforeEach, describe, it, expect } from 'vitest'
-import { HashGeneratorInMemory } from '@test/cryptography/hash-generator-in-memory'
+import { FakeHasher } from '@test/cryptography/fake-hasher'
 import { UpdateUserUseCase } from './update-delivery-driver'
 import { InvalidPasswordError } from '../../enterprise/entities/errors/invalid-password-error'
 import { InMemoryUsersRepository } from '@test/repositories/in-memory-users-repository'
@@ -7,14 +7,14 @@ import { InMemoryUsersRepository } from '@test/repositories/in-memory-users-repo
 import { makeUser } from '@test/factories/make-user'
 
 let inMemoryUsersRepository: InMemoryUsersRepository
-let inMemoryHashGenerator: HashGeneratorInMemory
+let fakeHasher: FakeHasher
 let sut: UpdateUserUseCase
 
 describe('UpdateUserUseCase', () => {
   beforeEach(() => {
     inMemoryUsersRepository = new InMemoryUsersRepository()
-    inMemoryHashGenerator = new HashGeneratorInMemory()
-    sut = new UpdateUserUseCase(inMemoryUsersRepository, inMemoryHashGenerator)
+    fakeHasher = new FakeHasher()
+    sut = new UpdateUserUseCase(inMemoryUsersRepository, fakeHasher)
   })
 
   it('should update delivery driver password', async () => {

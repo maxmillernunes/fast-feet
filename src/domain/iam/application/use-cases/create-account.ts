@@ -1,6 +1,6 @@
 import { Either, left, right } from '@/core/either'
 import { InvalidDocumentError } from '../../enterprise/entities/errors/invalid-document-error'
-import { AccountAlreadyExistsError } from '../../enterprise/entities/errors/account-already-exists-error'
+import { AccountAlreadyExistsError } from './errors/account-already-exists-error'
 import { InvalidPasswordError } from '../../enterprise/entities/errors/invalid-password-error'
 import { Password } from '../../enterprise/entities/values-objects/password'
 import { HashGenerator } from '../cryptography/hash-generator'

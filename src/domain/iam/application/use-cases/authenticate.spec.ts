@@ -1,26 +1,29 @@
 import { beforeEach, describe, it, expect } from 'vitest'
-import { HashComparerInMemory } from '@test/cryptography/hash-comparer-in-memory'
-import { InvalidCredentialsError } from '../../enterprise/entities/errors/invalid-credentials-error'
+import { FakeHasher } from '@test/cryptography/fake-hasher'
+import { WrongCredentialsError } from './errors/wrong-credentials-error'
 import { faker } from '@faker-js/faker'
 import { AuthenticateUseCase } from './authenticate'
 import { InMemoryUsersRepository } from '@test/repositories/in-memory-users-repository'
 import { DEFAULT_PASSWORD, makeUser } from '@test/factories/make-user'
+import { FakeEncrypter } from '@test/cryptography/fake-encrypter'
 
-let adminsRepository: InMemoryUsersRepository
-let hashComparer: HashComparerInMemory
+let usersRepository: InMemoryUsersRepository
+let fakeHasher: FakeHasher
+let encrypt: FakeEncrypter
 let sut: AuthenticateUseCase
 
 describe('AuthenticateUseCase', () => {
   beforeEach(() => {
-    adminsRepository = new InMemoryUsersRepository()
-    hashComparer = new HashComparerInMemory()
-    sut = new AuthenticateUseCase(adminsRepository, hashComparer)
+    usersRepository = new InMemoryUsersRepository()
+    fakeHasher = new FakeHasher()
+    encrypt = new FakeEncrypter()
+    sut = new AuthenticateUseCase(usersRepository, fakeHasher, encrypt)
   })
 
-  it('should authenticate a admin with valid credentials', async () => {
+  it('should authenticate a user with valid credentials', async () => {
     const document = faker.string.numeric(11)
     const user = makeUser({ document: document })
-    await adminsRepository.create(user)
+    await usersRepository.create(user)
 
     const result = await sut.execute({
       login: document,
@@ -29,7 +32,7 @@ describe('AuthenticateUseCase', () => {
 
     expect(result.isRight()).toBe(true)
     if (result.isRight()) {
-      expect(result.value.admin.document).toBe(document)
+      expect(result.value.user.document).toBe(document)
     }
   })
 
@@ -41,14 +44,14 @@ describe('AuthenticateUseCase', () => {
 
     expect(result.isLeft()).toBe(true)
     if (result.isLeft()) {
-      expect(result.value).toBeInstanceOf(InvalidCredentialsError)
+      expect(result.value).toBeInstanceOf(WrongCredentialsError)
     }
   })
 
   it('should return error for invalid password', async () => {
     const document = faker.string.numeric(11)
     const user = makeUser({ document: document })
-    await adminsRepository.create(user)
+    await usersRepository.create(user)
 
     const result = await sut.execute({
       login: document,
@@ -57,7 +60,7 @@ describe('AuthenticateUseCase', () => {
 
     expect(result.isLeft()).toBe(true)
     if (result.isLeft()) {
-      expect(result.value).toBeInstanceOf(InvalidCredentialsError)
+      expect(result.value).toBeInstanceOf(WrongCredentialsError)
     }
   })
 })

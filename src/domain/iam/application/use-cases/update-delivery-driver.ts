@@ -1,6 +1,6 @@
 import { Either, left, right } from '@/core/either'
 import { NotAllowedError } from '@/core/errors/errors/not-allowed-error'
-import { DriverNotFoundError } from '../../enterprise/entities/errors/user-not-found-error'
+import { DriverNotFoundError } from './errors/user-not-found-error'
 import { InvalidPasswordError } from '../../enterprise/entities/errors/invalid-password-error'
 import { Password } from '../../enterprise/entities/values-objects/password'
 import { HashGenerator } from '../cryptography/hash-generator'

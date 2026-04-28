@@ -1,5 +1,5 @@
 import { Either, left, right } from '@/core/either'
-import { DriverNotFoundError } from '../../enterprise/entities/errors/user-not-found-error'
+import { DriverNotFoundError } from './errors/user-not-found-error'
 import { UsersRepository } from '../repositories/users-repository'
 import type { User } from '../../enterprise/entities/user'
 

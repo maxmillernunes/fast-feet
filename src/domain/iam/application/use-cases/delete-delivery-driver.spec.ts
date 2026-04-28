@@ -1,6 +1,6 @@
 import { beforeEach, describe, it, expect } from 'vitest'
 import { DeleteUserUseCase } from './delete-delivery-driver'
-import { DriverNotFoundError } from '../../enterprise/entities/errors/user-not-found-error'
+import { DriverNotFoundError } from './errors/user-not-found-error'
 import { InMemoryUsersRepository } from '@test/repositories/in-memory-users-repository'
 import { makeUser } from '@test/factories/make-user'
 
