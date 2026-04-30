@@ -40,13 +40,19 @@ export class CreateAccountUseCase {
       return left(new InvalidDocumentError(document))
     }
 
-    const existsUser = await this.usersRepository.findByLogin(document)
+    const existsUserWithSameDocument =
+      await this.usersRepository.findByLogin(document)
 
-    if (existsUser) {
+    if (existsUserWithSameDocument) {
       return left(new AccountAlreadyExistsError(document))
     }
 
-    console.log('Passou')
+    const existsUserWithSameEmail =
+      await this.usersRepository.findByEmail(email)
+
+    if (existsUserWithSameEmail) {
+      return left(new AccountAlreadyExistsError(email))
+    }
 
     const passwordResult = Password.createFromText(password)
 

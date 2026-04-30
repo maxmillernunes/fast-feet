@@ -1,27 +1,30 @@
 import { Either, left, right } from '@/core/either'
 import { DriverNotFoundError } from './errors/user-not-found-error'
-import type { User } from '../../enterprise/entities/user'
 import { UsersRepository } from '../repositories/users-repository'
+import { Injectable } from '@nestjs/common'
 
-interface DeleteUserRequest {
+interface DeleteDeliveryDriverRequest {
   driverId: string
 }
 
-type DeleteUserResponse = Either<DriverNotFoundError, { driver: User }>
+type DeleteDeliveryDriverResponse = Either<DriverNotFoundError, null>
 
-export class DeleteUserUseCase {
+@Injectable()
+export class DeleteDeliveryDriverByIdUseCase {
   constructor(private usersRepository: UsersRepository) {}
 
-  async execute({ driverId }: DeleteUserRequest): Promise<DeleteUserResponse> {
+  async execute({
+    driverId,
+  }: DeleteDeliveryDriverRequest): Promise<DeleteDeliveryDriverResponse> {
     const driver = await this.usersRepository.findById(driverId)
 
     if (!driver) {
-      return left(new DriverNotFoundError(driverId))
+      return left(new DriverNotFoundError())
     }
 
     driver.delete()
     await this.usersRepository.save(driver)
 
-    return right({ driver })
+    return right(null)
   }
 }

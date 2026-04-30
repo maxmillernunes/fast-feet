@@ -10,7 +10,6 @@ import z from 'zod'
 import { ZodValidationPipe } from '../pipes/zod-validation-pipes'
 import { CreateAccountUseCase } from '@/domain/iam/application/use-cases/create-account'
 import { UserRole } from '@/domain/iam/enterprise/entities/user'
-import { JwtAuthGuard } from '@/infra/auth/jwt-auth.guard'
 import { InvalidDocumentError } from '@/domain/iam/enterprise/entities/errors/invalid-document-error'
 import { AccountAlreadyExistsError } from '@/domain/iam/application/use-cases/errors/account-already-exists-error'
 import { InvalidPasswordError } from '@/domain/iam/enterprise/entities/errors/invalid-password-error'
@@ -38,7 +37,6 @@ const createAccountBodySchema = z.object({
       return true
     }, 'Document inválido'),
   password: z.string(),
-  role: z.enum(UserRole),
 })
 
 const bodyValidationSchema = new ZodValidationPipe(createAccountBodySchema)
@@ -51,14 +49,14 @@ export class CreateAccountController {
 
   @Post()
   async handle(@Body(bodyValidationSchema) body: CreateAccountBodySchema) {
-    const { document, email, name, password, role } = body
+    const { document, email, name, password } = body
 
     const result = await this.createAccount.execute({
       document,
       email,
       name,
       password,
-      role,
+      role: UserRole.ADMIN,
     })
 
     if (result.isLeft()) {

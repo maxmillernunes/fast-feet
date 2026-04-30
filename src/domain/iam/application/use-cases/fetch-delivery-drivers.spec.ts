@@ -1,20 +1,20 @@
 import { beforeEach, describe, it, expect } from 'vitest'
-import { ListUsersUseCase } from './list-delivery-drivers'
+import { FetchUsersUseCase } from './fetch-delivery-drivers'
 import { InMemoryUsersRepository } from '@test/repositories/in-memory-users-repository'
 
 import { makeUser } from '@test/factories/make-user'
 
 let inMemoryUsersRepository: InMemoryUsersRepository
-let sut: ListUsersUseCase
+let sut: FetchUsersUseCase
 
-describe('ListUsersUseCase', () => {
+describe('FetchUsersUseCase', () => {
   beforeEach(() => {
     inMemoryUsersRepository = new InMemoryUsersRepository()
 
-    sut = new ListUsersUseCase(inMemoryUsersRepository)
+    sut = new FetchUsersUseCase(inMemoryUsersRepository)
   })
 
-  it('should return a paginated list of delivery drivers', async () => {
+  it('should return a paginated fetch of delivery drivers', async () => {
     for (let i = 0; i < 25; i++) {
       await inMemoryUsersRepository.create(makeUser())
     }

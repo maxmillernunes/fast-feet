@@ -6,31 +6,33 @@ import { Password } from '../../enterprise/entities/values-objects/password'
 import { HashGenerator } from '../cryptography/hash-generator'
 import { UsersRepository } from '../repositories/users-repository'
 import type { User } from '../../enterprise/entities/user'
+import { Injectable } from '@nestjs/common'
 
-interface UpdateUserRequest {
-  userId: string
+interface UpdateDeliveryDriverRequest {
+  driverId: string
   password: string
 }
 
-type UpdateUserResponse = Either<
+type UpdateDeliveryDriverResponse = Either<
   DriverNotFoundError | InvalidPasswordError | NotAllowedError,
   { driver: User }
 >
 
-export class UpdateUserUseCase {
+@Injectable()
+export class UpdateDeliveryDriverUseCase {
   constructor(
     private usersRepository: UsersRepository,
     private hashGenerator: HashGenerator,
   ) {}
 
   async execute({
-    userId,
+    driverId,
     password,
-  }: UpdateUserRequest): Promise<UpdateUserResponse> {
-    const driver = await this.usersRepository.findById(userId)
+  }: UpdateDeliveryDriverRequest): Promise<UpdateDeliveryDriverResponse> {
+    const driver = await this.usersRepository.findById(driverId)
 
     if (!driver) {
-      return left(new DriverNotFoundError(userId))
+      return left(new DriverNotFoundError())
     }
 
     const passwordResult = Password.createFromText(password)

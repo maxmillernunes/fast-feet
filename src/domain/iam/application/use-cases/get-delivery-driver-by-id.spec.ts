@@ -1,18 +1,18 @@
 import { beforeEach, describe, it, expect } from 'vitest'
-import { GetUserUseCase } from './get-delivery-driver'
+import { GetDeliveryDriverByIdUseCase } from './get-delivery-driver-by-id'
 import { DriverNotFoundError } from './errors/user-not-found-error'
 
 import { InMemoryUsersRepository } from '@test/repositories/in-memory-users-repository'
 import { makeUser } from '@test/factories/make-user'
 
 let inMemoryUsersRepository: InMemoryUsersRepository
-let sut: GetUserUseCase
+let sut: GetDeliveryDriverByIdUseCase
 
-describe('GetUserUseCase', () => {
+describe('GetDeliveryDriverByIdUseCase', () => {
   beforeEach(() => {
     inMemoryUsersRepository = new InMemoryUsersRepository()
 
-    sut = new GetUserUseCase(inMemoryUsersRepository)
+    sut = new GetDeliveryDriverByIdUseCase(inMemoryUsersRepository)
   })
 
   it('should return a delivery driver by id', async () => {

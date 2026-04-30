@@ -1,5 +1,5 @@
 export class DriverNotFoundError extends Error {
-  constructor(identifier: string) {
-    super(`Driver not found: ${identifier}`)
+  constructor() {
+    super('Driver not found')
   }
 }

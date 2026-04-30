@@ -19,14 +19,14 @@ export class InMemoryUsersRepository implements UsersRepository {
     return this.items.find((u) => u.email === email && !u.isDeleted) ?? null
   }
 
-  async findMany({ page, perPage }: PaginationParams): Promise<User[]> {
+  async findManyDrivers({ page, perPage }: PaginationParams): Promise<User[]> {
     const active = this.items.filter((u) => !u.isDeleted)
     const start = (page - 1) * perPage
     const end = start + perPage
     return active.slice(start, end)
   }
 
-  async count(): Promise<number> {
+  async countDrivers(): Promise<number> {
     return this.items.filter((u) => !u.isDeleted).length
   }
 

@@ -13,6 +13,7 @@ export class PrismaUsersRepository implements UsersRepository {
     const user = await this.prisma.user.findUnique({
       where: {
         id,
+        deletedAt: null,
       },
     })
 
@@ -51,12 +52,24 @@ export class PrismaUsersRepository implements UsersRepository {
     return PrismaUserMapper.toDomain(user)
   }
 
-  async findMany(params: PaginationParams): Promise<User[]> {
-    throw new Error('Method not implemented.')
+  async findManyDrivers(params: PaginationParams): Promise<User[]> {
+    const users = await this.prisma.user.findMany({
+      where: {
+        role: 'DRIVER',
+      },
+      skip: (params.page - 1) * params.perPage,
+      take: params.perPage,
+    })
+
+    return users.map(PrismaUserMapper.toDomain)
   }
 
-  async count(): Promise<number> {
-    throw new Error('Method not implemented.')
+  async countDrivers(): Promise<number> {
+    return this.prisma.user.count({
+      where: {
+        role: 'DRIVER',
+      },
+    })
   }
 
   async create(user: User): Promise<void> {
@@ -66,10 +79,21 @@ export class PrismaUsersRepository implements UsersRepository {
   }
 
   async save(user: User): Promise<void> {
-    throw new Error('Method not implemented.')
+    const data = PrismaUserMapper.toPrisma(user)
+
+    await this.prisma.user.update({
+      where: {
+        id: data.id,
+      },
+      data,
+    })
   }
 
   async delete(user: User): Promise<void> {
-    throw new Error('Method not implemented.')
+    await this.prisma.user.delete({
+      where: {
+        id: user.id.toString(),
+      },
+    })
   }
 }
