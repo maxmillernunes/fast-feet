@@ -5,7 +5,10 @@ import {
   type UserProps,
 } from '@/domain/iam/enterprise/entities/user'
 import { Password } from '@/domain/iam/enterprise/entities/values-objects/password'
+import { PrismaUserMapper } from '@/infra/database/prisma/mappers/prisma-user-mapper'
+import { PrismaService } from '@/infra/database/prisma/prisma.service'
 import { faker } from '@faker-js/faker'
+import { Injectable } from '@nestjs/common'
 
 const DEFAULT_PASSWORD = 'ValidPass123!'
 
@@ -28,6 +31,21 @@ export function makeUser(
   )
 
   return admin
+}
+
+@Injectable()
+export class UserFactory {
+  constructor(private prisma: PrismaService) {}
+
+  async makePrismaUser(data: Partial<UserProps> = {}): Promise<User> {
+    const user = makeUser(data)
+
+    await this.prisma.user.create({
+      data: PrismaUserMapper.toPrisma(user),
+    })
+
+    return user
+  }
 }
 
 export { DEFAULT_PASSWORD }

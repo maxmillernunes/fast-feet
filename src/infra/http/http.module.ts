@@ -1,10 +1,12 @@
 import { Module } from '@nestjs/common'
-import { CreateAccountController } from './controllers/create-account.controller'
+import { StorageModule } from '../storage/storage.module'
 import { DatabaseModule } from '../database/database.module'
+import { CryptographyModule } from '../cryptography/cryptography.module'
+
+import { CreateAccountController } from './controllers/create-account.controller'
 import { AuthenticateController } from './controllers/authenticate.controller'
 import { RegisterDeliveryDriverController } from './controllers/register-delivery-driver.controller'
 import { CreateAccountUseCase } from '@/domain/iam/application/use-cases/create-account'
-import { CryptographyModule } from '../cryptography/cryptography.module'
 import { AuthenticateUseCase } from '@/domain/iam/application/use-cases/authenticate'
 import { FetchDeliveryDriversUseCase } from '@/domain/iam/application/use-cases/fetch-delivery-drivers'
 import { FetchDeliveryDriversController } from './controllers/fetch-delivery-drivers.controller'
@@ -14,9 +16,11 @@ import { DeleteDeliveryDriversController } from './controllers/delete-delivery-d
 import { DeleteDeliveryDriverByIdUseCase } from '@/domain/iam/application/use-cases/delete-delivery-driver'
 import { UpdateDeliveryDriversController } from './controllers/update-delivery-drivers.controller'
 import { UpdateDeliveryDriverUseCase } from '@/domain/iam/application/use-cases/update-delivery-driver'
+import { UploadAttachmentController } from './controllers/upload-attachment.controller'
+import { UploadAndCreateAttachmentUseCase } from '@/domain/logistics/application/use-cases/upload-and-create-attachment'
 
 @Module({
-  imports: [DatabaseModule, CryptographyModule],
+  imports: [DatabaseModule, CryptographyModule, StorageModule],
   controllers: [
     CreateAccountController,
     AuthenticateController,
@@ -25,6 +29,8 @@ import { UpdateDeliveryDriverUseCase } from '@/domain/iam/application/use-cases/
     GetDeliveryDriversController,
     DeleteDeliveryDriversController,
     UpdateDeliveryDriversController,
+
+    UploadAttachmentController,
   ],
   providers: [
     CreateAccountUseCase,
@@ -33,6 +39,7 @@ import { UpdateDeliveryDriverUseCase } from '@/domain/iam/application/use-cases/
     GetDeliveryDriverByIdUseCase,
     DeleteDeliveryDriverByIdUseCase,
     UpdateDeliveryDriverUseCase,
+    UploadAndCreateAttachmentUseCase,
   ],
 })
 export class HttpModule {}

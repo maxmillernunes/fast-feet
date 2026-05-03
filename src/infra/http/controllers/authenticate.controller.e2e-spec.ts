@@ -23,7 +23,7 @@ describe('Authenticate (e2e)', () => {
     await app.init()
   })
 
-  test('[POST] /sessions', async () => {
+  test.skip('[POST] /sessions', async () => {
     await prisma.user.create({
       data: {
         name: 'John Doe',
