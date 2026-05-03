@@ -1,9 +1,12 @@
-import 'dotenv/config'
+import { config } from 'dotenv'
 import { PrismaClient } from '@/infra/database/prisma/client/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { execSync } from 'child_process'
 import { randomUUID } from 'crypto'
 import { afterAll, beforeAll } from 'vitest'
+
+config({ path: '.env', override: true })
+config({ path: '.env.test', override: true })
 
 const schemaId = randomUUID()
 let prisma: PrismaClient
