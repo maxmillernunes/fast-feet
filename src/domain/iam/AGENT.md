@@ -58,22 +58,24 @@ Local: `src/domain/iam/application/repositories/users-repository.ts`
 
 Métodos disponíveis:
 
-| Método           | Descrição            |
-| ---------------- | -------------------- |
-| `findById`       | Buscar por ID        |
-| `findByDocument` | Buscar por documento |
-| `findMany`       | Listar com paginação |
-| `count`          | Contar total         |
-| `create`         | Criar novo           |
-| `save`           | Atualizar existente  |
-| `delete`         | Soft delete          |
+| Método             | Descrição                  |
+| ------------------ | -------------------------- |
+| `findById`         | Buscar por ID              |
+| `findByLogin`      | Buscar por documento/login |
+| `findByEmail`      | Buscar por email           |
+| `findManyDrivers`  | Listar entregadores        |
+| `countDrivers`     | Contar entregadores        |
+| `create`           | Criar novo                 |
+| `save`             | Atualizar existente        |
+| `delete`           | Hard delete                |
 
 ### Cryptography
 
-| Interface         | Descrição              |
-| ----------------- | ---------------------- |
-| **HashGenerator** | Gera hash de senha     |
-| **HashComparer**  | Compara senha com hash |
+| Interface         | Descrição                 |
+| ----------------- | ------------------------- |
+| **HashGenerator** | Gera hash de senha        |
+| **HashComparer**  | Compara senha com hash   |
+| **Encrypter**     | Gera token JWT            |
 
 ## PADRÕES DE CÓDIGO
 

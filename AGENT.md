@@ -12,27 +12,30 @@ Um sistema onde:
 
 ## STACK
 
-| Tecnologia | Uso                     |
-| ---------- | ----------------------- |
-| NestJS     | Framework               |
-| TypeScript | Linguagem               |
-| Vitest     | Testes                  |
-| Prisma     | Banco de dados (futuro) |
+| Tecnologia | Uso                    |
+| ---------- | ---------------------- |
+| NestJS     | Framework              |
+| TypeScript | Linguagem              |
+| Vitest     | Testes                 |
+| Prisma     | Banco de dados         |
+| PostgreSQL | Banco relacional       |
+| AWS S3     | Armazenamento arquivos |
 
 ## ARQUITETURA
 
 ```
 src/
 ├── core/        # Compartilhado (Entity, Either, tipos)
-├── domain/      # Regras de negócio
-└── infra/       # Controllers, banco (futuro)
+├── domain/      # Regras de negócio (DDD)
+└── infra/       # Controllers, HTTP, Database, Auth, Storage
 ```
 
 ### Regras Importantes
 
-1. **Isolamento:** `core/` e `domain/` nunca importam de `infra/`
-2. **Imports:** Sempre paths absolutos (`@/core/`, `@/domain/`)
-3. **Fluxo:** Camadas externas conhecem internas, nunca o contrário
+1. **Isolamento:** `core/` e `domain/` nunca importam de `infra/` (exceto `@Injectable()`)
+2. **@Injectable():** A única exceção é o decorador do NestJS para injeção de dependência
+3. **Imports:** Sempre paths absolutos (`@/core/`, `@/domain/`)
+4. **Fluxo:** Camadas externas conhecem internas, nunca o contrário
 
 ## PADRÃO DE NOMES
 
