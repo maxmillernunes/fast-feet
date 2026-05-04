@@ -13,11 +13,14 @@ Sistema de gestão de encomendas onde:
 
 ## ENTIDADES DO DOMÍNIO
 
-| Entidade        | Descrição    | Identidade |
-| --------------- | ------------ | ---------- |
-| **Order**       | Encomenda    | ID único   |
-| **Recipient**   | Destinatário | ID único   |
-| **Deliveryman** | Entregador   | (futuro)   |
+| Entidade         | Descrição                | Identidade |
+| ---------------- | ------------------------ | ---------- |
+| **Order**        | Encomenda                | ID único   |
+| **Recipient**    | Destinatário             | ID único   |
+| **Attachment**   | Anexo (foto da entrega)  | ID único   |
+| **OrderAttachment** | Anexo associado ao pedido | ID único |
+
+> Nota: O entregador é gerenciado no domínio IAM (User com role DRIVER).
 
 ## VALUE OBJECTS
 

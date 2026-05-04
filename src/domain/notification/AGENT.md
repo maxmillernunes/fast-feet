@@ -12,9 +12,9 @@ Sistema de envio e gerenciamento de notificações para os usuários, baseado em
 
 ## ENTIDADES DO DOMÍNIO
 
-| Entidade     | Descrição                        | Identidade |
-| ------------ | -------------------------------- | ---------- |
-| **[Entity]** | Notificação enviada a um usuário | ID único   |
+| Entidade        | Descrição                        | Identidade |
+| --------------- | -------------------------------- | ---------- |
+| **Notification** | Notificação enviada a um usuário | ID único   |
 
 ## CONCEITOS-CHAVE
 
@@ -46,7 +46,7 @@ Sistema de envio e gerenciamento de notificações para os usuários, baseado em
 └────────┬────────┘        └─────────────────┘
          │                            │
          │ emit event                 │
-         │[Entity]Event─────────────▶ │
+         │OrderCreatedEvent─────────────▶ │
          │                            │
          │                            │ dispatch
          │                            │
@@ -80,7 +80,7 @@ Sistema de envio e gerenciamento de notificações para os usuários, baseado em
 
 2. **Permissão**
    - Só o destinatário da notificação pode lê-la
-   - Validação em `Read[Entity]UseCase`
+   - Validação em `ReadNotificationUseCase`
 
 3. **Domain Events**
    - Só envia notificação se entidade relacionada existe

@@ -53,6 +53,35 @@ const recipient = makeRecipient({
 })
 ```
 
+### makeUser
+
+```typescript
+import { makeUser } from '@test/factories/make-user'
+import { UserRole } from '@/domain/iam/enterprise/entities/user'
+
+// Com valores padrão
+const user = makeUser()
+
+// Com overrides (criar entregador)
+const driver = makeUser({
+  role: UserRole.DRIVER,
+})
+```
+
+### makeNotification
+
+```typescript
+import { makeNotification } from '@test/factories/make-notification'
+
+// Com valores padrão
+const notification = makeNotification()
+
+// Com overrides
+const notification = makeNotification({
+  recipientId: new UniqueEntityId('recipient-1'),
+})
+```
+
 ---
 
 ## COMO USAR IN-MEMORY REPOSITORY
