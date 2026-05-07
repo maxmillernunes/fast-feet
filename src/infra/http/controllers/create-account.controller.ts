@@ -6,6 +6,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common'
+import { RequireRoles } from '@/infra/auth/permission-user-decorator'
 import z from 'zod'
 import { ZodValidationPipe } from '../pipes/zod-validation-pipes'
 import { CreateAccountUseCase } from '@/domain/iam/application/use-cases/create-account'
@@ -48,6 +49,7 @@ export class CreateAccountController {
   constructor(private createAccount: CreateAccountUseCase) {}
 
   @Post()
+  @UseGuards(RequireRoles('ADMIN'))
   async handle(@Body(bodyValidationSchema) body: CreateAccountBodySchema) {
     const { document, email, name, password } = body
 

@@ -276,3 +276,72 @@ Use `@test/` como path alias:
 import { makeOrder } from '@test/factories/make-order'
 import { InMemoryOrdersRepository } from '@test/repositories/in-memory-orders-repository'
 ```
+
+---
+
+## TESTES E2E
+
+Testes de integração que usam banco de dados real e a aplicação completa.
+
+### Estrutura padrão
+
+```typescript
+import { Test } from '@nestjs/testing'
+import type { INestApplication } from '@nestjs/common'
+
+import request from 'supertest'
+import { JwtService } from '@nestjs/jwt'
+import { UserFactory } from '@test/factories/make-user'
+import { UserRole } from '@/domain/iam/enterprise/entities/user'
+
+describe('Controller Name (e2e)', () => {
+  let app: INestApplication
+  let jwt: JwtService
+  let userFactory: UserFactory
+
+  beforeAll(async () => {
+    const { AppModule } = await import('@/infra/app.module.js')
+    const { DatabaseModule } =
+      await import('@/infra/database/database.module.js')
+
+    const moduleRef = await Test.createTestingModule({
+      imports: [AppModule, DatabaseModule],
+      providers: [UserFactory],
+    }).compile()
+
+    app = moduleRef.createNestApplication()
+
+    jwt = moduleRef.get(JwtService)
+    userFactory = moduleRef.get(UserFactory)
+
+    await app.init()
+  })
+
+  test('[METHOD] /rota', async () => {
+    const admin = await userFactory.makePrismaUser({
+      role: UserRole.ADMIN,
+    })
+
+    const token = jwt.sign({ sub: admin.id.toString() }, { expiresIn: '1d' })
+
+    const response = await request(app.getHttpServer())
+      .post('/rota')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ /* dados */ })
+
+    expect(response.status).toBe(201)
+  })
+})
+```
+
+### Regras
+
+1. **Sempre usar UserFactory** para criar usuários no banco de dados
+2. **Sempre incluir DatabaseModule** no setup
+3. **Um único teste por arquivo** para manter速度快 (execution ~17s para todos)
+4. **Sem testes de erro** - apenas happy path
+5. **Roda com:** `pnpm test:e2e -- --run`
+
+### Arquivos de teste
+
+Localização: `src/infra/http/controllers/*.e2e-spec.ts`

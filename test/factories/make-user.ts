@@ -9,6 +9,7 @@ import { PrismaUserMapper } from '@/infra/database/prisma/mappers/prisma-user-ma
 import { PrismaService } from '@/infra/database/prisma/prisma.service'
 import { faker } from '@faker-js/faker'
 import { Injectable } from '@nestjs/common'
+import { hash } from 'bcrypt'
 
 const DEFAULT_PASSWORD = 'ValidPass123!'
 
@@ -40,8 +41,14 @@ export class UserFactory {
   async makePrismaUser(data: Partial<UserProps> = {}): Promise<User> {
     const user = makeUser(data)
 
+    const password = data.password || DEFAULT_PASSWORD
+    const hashedPassword = await hash(password, 10)
+
     await this.prisma.user.create({
-      data: PrismaUserMapper.toPrisma(user),
+      data: {
+        ...PrismaUserMapper.toPrisma(user),
+        password: hashedPassword,
+      },
     })
 
     return user

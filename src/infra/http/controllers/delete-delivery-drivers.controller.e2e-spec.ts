@@ -6,7 +6,7 @@ import { JwtService } from '@nestjs/jwt'
 import { UserFactory } from '@test/factories/make-user'
 import { UserRole } from '@/domain/iam/enterprise/entities/user'
 
-describe('Authenticate (e2e)', () => {
+describe('Delete Delivery Driver (e2e)', () => {
   let app: INestApplication
   let jwt: JwtService
   let userFactory: UserFactory
@@ -29,19 +29,21 @@ describe('Authenticate (e2e)', () => {
     await app.init()
   })
 
-  test('[POST] /sessions', async () => {
-    const user = await userFactory.makePrismaUser({
-      role: UserRole.ADMIN,
-    })
-
-    const response = await request(app.getHttpServer()).post('/sessions').send({
-      login: user.document,
-      password: 'ValidPass123!',
-    })
-
-    expect(response.status).toBe(201)
-    expect(response.body).toEqual({
-      access_token: expect.any(String),
-    })
+  test('[DELETE] /delivery-drivers/:id', async () => {
+  const admin = await userFactory.makePrismaUser({
+    role: UserRole.ADMIN,
   })
+
+  const driver = await userFactory.makePrismaUser({
+    role: UserRole.DRIVER,
+  })
+
+  const token = jwt.sign({ sub: admin.id.toString() }, { expiresIn: '1d' })
+
+  const response = await request(app.getHttpServer())
+    .delete(`/delivery-drivers/${driver.id.toString()}`)
+    .set('Authorization', `Bearer ${token}`)
+
+  expect(response.status).toBe(200)
+})
 })
