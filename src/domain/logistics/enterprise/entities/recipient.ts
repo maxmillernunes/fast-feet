@@ -17,6 +17,7 @@ export interface RecipientProps {
   longitude: number
   createdAt: Date
   updatedAt?: Date
+  deletedAt?: Date | null
 }
 
 export class Recipient extends Entity<RecipientProps> {
@@ -72,6 +73,19 @@ export class Recipient extends Entity<RecipientProps> {
     return this.props.updatedAt
   }
 
+  get deletedAt() {
+    return this.props.deletedAt
+  }
+
+  get isDeleted() {
+    return this.props.deletedAt !== undefined
+  }
+
+  delete() {
+    this.props.deletedAt = new Date()
+    this.touch()
+  }
+
   private touch() {
     this.props.updatedAt = new Date()
   }
@@ -93,7 +107,7 @@ export class Recipient extends Entity<RecipientProps> {
   }
 
   static create(
-    props: Optional<RecipientProps, 'createdAt'>,
+    props: Optional<RecipientProps, 'createdAt' | 'deletedAt'>,
     id?: UniqueEntityId,
   ) {
     const recipient = new Recipient(

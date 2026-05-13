@@ -27,7 +27,7 @@ export const RequireRoles = (
     constructor(private usersRepository: UsersRepository) {}
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
-      const request = context.switchToHttp().getRequest() as RequestWithUser
+      const request = context.switchToHttp().getRequest()
       const user = request.user
 
       if (!user) {

@@ -1,6 +1,6 @@
 import { beforeEach, describe, it, expect } from 'vitest'
 import { FakeHasher } from '@test/cryptography/fake-hasher'
-import { UpdateUserUseCase } from './update-delivery-driver'
+import { UpdateDeliveryDriverUseCase } from './update-delivery-driver'
 import { InvalidPasswordError } from '../../enterprise/entities/errors/invalid-password-error'
 import { InMemoryUsersRepository } from '@test/repositories/in-memory-users-repository'
 
@@ -8,13 +8,13 @@ import { makeUser } from '@test/factories/make-user'
 
 let inMemoryUsersRepository: InMemoryUsersRepository
 let fakeHasher: FakeHasher
-let sut: UpdateUserUseCase
+let sut: UpdateDeliveryDriverUseCase
 
-describe('UpdateUserUseCase', () => {
+describe('UpdateDeliveryDriverUseCase', () => {
   beforeEach(() => {
     inMemoryUsersRepository = new InMemoryUsersRepository()
     fakeHasher = new FakeHasher()
-    sut = new UpdateUserUseCase(inMemoryUsersRepository, fakeHasher)
+    sut = new UpdateDeliveryDriverUseCase(inMemoryUsersRepository, fakeHasher)
   })
 
   it('should update delivery driver password', async () => {
@@ -22,7 +22,7 @@ describe('UpdateUserUseCase', () => {
     await inMemoryUsersRepository.create(driver)
 
     const result = await sut.execute({
-      userId: driver.id.toString(),
+      driverId: driver.id.toString(),
       password: 'NewPass123!',
     })
 
@@ -37,7 +37,7 @@ describe('UpdateUserUseCase', () => {
     await inMemoryUsersRepository.create(driver)
 
     const result = await sut.execute({
-      userId: driver.id.toString(),
+      driverId: driver.id.toString(),
       password: 'weak',
     })
 

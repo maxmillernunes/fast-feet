@@ -1,6 +1,7 @@
+import { Injectable } from '@nestjs/common'
 import { left, right, type Either } from '@/core/either'
 import type { Recipient } from '../../enterprise/entities/recipient'
-import type { RecipientsRepository } from '../repositories/recipients-repository'
+import { RecipientsRepository } from '../repositories/recipients-repository'
 import { ResourceNotFoundError } from '@/core/errors/errors/resource-not-found-error'
 import { Document } from '../../enterprise/entities/values-objects/document'
 import type { DocumentInvalidError } from '../../enterprise/entities/errors/document-invalid-error'
@@ -25,6 +26,7 @@ type EditRecipientUseCaseResponse = Either<
   { recipient: Recipient }
 >
 
+@Injectable()
 export class EditRecipientUseCase {
   constructor(private recipientsRepository: RecipientsRepository) {}
 

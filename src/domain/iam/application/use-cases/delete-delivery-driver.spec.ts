@@ -1,16 +1,16 @@
 import { beforeEach, describe, it, expect } from 'vitest'
-import { DeleteUserUseCase } from './delete-delivery-driver'
+import { DeleteDeliveryDriverByIdUseCase } from './delete-delivery-driver'
 import { DriverNotFoundError } from './errors/user-not-found-error'
 import { InMemoryUsersRepository } from '@test/repositories/in-memory-users-repository'
 import { makeUser } from '@test/factories/make-user'
 
 let inMemoryUsersRepository: InMemoryUsersRepository
-let sut: DeleteUserUseCase
+let sut: DeleteDeliveryDriverByIdUseCase
 
-describe('DeleteUserUseCase', () => {
+describe('DeleteDeliveryDriverByIdUseCase', () => {
   beforeEach(() => {
     inMemoryUsersRepository = new InMemoryUsersRepository()
-    sut = new DeleteUserUseCase(inMemoryUsersRepository)
+    sut = new DeleteDeliveryDriverByIdUseCase(inMemoryUsersRepository)
   })
 
   it('should soft delete a delivery driver', async () => {
@@ -22,9 +22,6 @@ describe('DeleteUserUseCase', () => {
     })
 
     expect(result.isRight()).toBe(true)
-    if (result.isRight()) {
-      expect(result.value.driver.isDeleted).toBe(true)
-    }
 
     const deletedUser = inMemoryUsersRepository.items.find((u) =>
       u.id.equals(user.id),

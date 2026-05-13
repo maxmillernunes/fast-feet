@@ -4,7 +4,10 @@ import {
   type RecipientProps,
 } from '@/domain/logistics/enterprise/entities/recipient'
 import { Document } from '@/domain/logistics/enterprise/entities/values-objects/document'
+import { PrismaRecipientMapper } from '@/infra/database/prisma/mappers/prisma-recipient-mapper'
+import { PrismaService } from '@/infra/database/prisma/prisma.service'
 import { faker } from '@faker-js/faker'
+import { Injectable } from '@nestjs/common'
 
 export function makeRecipient(
   override: Partial<RecipientProps> = {},
@@ -35,4 +38,21 @@ export function makeRecipient(
   )
 
   return recipient
+}
+
+@Injectable()
+export class RecipientFactory {
+  constructor(private prisma: PrismaService) {}
+
+  async makePrismaRecipient(
+    data: Partial<RecipientProps> = {},
+  ): Promise<Recipient> {
+    const recipient = makeRecipient(data)
+
+    await this.prisma.recipient.create({
+      data: PrismaRecipientMapper.toPrisma(recipient),
+    })
+
+    return recipient
+  }
 }
