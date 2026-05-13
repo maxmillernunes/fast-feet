@@ -1,3 +1,4 @@
+import { Injectable } from '@nestjs/common'
 import { UniqueEntityId } from '@/core/entities/unique-entity-id'
 import { left, right, type Either } from '@/core/either'
 import { NotAllowedError } from '@/core/errors/errors/not-allowed-error'
@@ -16,6 +17,7 @@ type EditOrderUseCaseResponse = Either<
   { order: Order }
 >
 
+@Injectable()
 export class EditOrderUseCase {
   constructor(
     private ordersRepository: OrdersRepository,

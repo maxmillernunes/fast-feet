@@ -33,9 +33,70 @@ model User {
 }
 
 model Attachment {
-  id    String @id @default(uuid())
-  title String
-  url   String
+  id        String   @id @default(uuid())
+  title     String
+  url       String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  orders OrderAttachment[]
 
   @@map("attachments")
+}
+
+enum OrderStatus {
+  CREATED
+  WAITING
+  PICKED_UP
+  DELIVERED
+  RETURNED
+}
+
+model Recipient {
+  id           String   @id @default(uuid())
+  name         String
+  document     String   @unique
+  country      String
+  zipCode      String
+  state        String
+  city         String
+  street       String
+  neighborhood String
+  complement   String?
+  latitude     Float
+  longitude    Float
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime? @updatedAt @map("updated_at")
+  deletedAt    DateTime? @map("deleted_at")
+
+  orders Order[]
+
+  @@map("recipients")
+}
+
+model Order {
+  id              String        @id @default(uuid())
+  recipientId     String
+  deliveryDriveId String?
+  status          OrderStatus   @default(CREATED)
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime?     @updatedAt @map("updated_at")
+  pickedAt        DateTime?     @map("picked_at")
+  deliveredAt     DateTime?     @map("delivered_at")
+  deletedAt       DateTime?     @map("deleted_at")
+
+  recipient   Recipient        @relation(fields: [recipientId], references: [id])
+  attachments OrderAttachment[]
+
+  @@map("orders")
+}
+
+model OrderAttachment {
+  id           String @id @default(uuid())
+  orderId      String
+  attachmentId String
+
+  order      Order      @relation(fields: [orderId], references: [id])
+  attachment Attachment @relation(fields: [attachmentId], references: [id])
+
+  @@map("order_attachments")
 }

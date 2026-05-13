@@ -1,3 +1,4 @@
+import { Injectable } from '@nestjs/common'
 import { right, type Either } from '@/core/either'
 import type { Order } from '../../enterprise/entities/order'
 import { OrdersRepository } from '../repositories/orders-repository'
@@ -14,6 +15,7 @@ type FetchNearbyOrdersResponse = Either<
   }
 >
 
+@Injectable()
 export class FetchNearbyOrdersUseCase {
   constructor(private ordersRepository: OrdersRepository) {}
 

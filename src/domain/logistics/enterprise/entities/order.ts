@@ -23,6 +23,7 @@ export interface OrderProps {
   updatedAt?: Date
   pickedAt?: Date
   deliveredAt?: Date
+  deletedAt?: Date | null
 }
 
 type DeliveryOrder = Either<
@@ -70,6 +71,19 @@ export class Order extends AggregateRoot<OrderProps> {
 
   get deliveredAt() {
     return this.props.deliveredAt
+  }
+
+  get deletedAt() {
+    return this.props.deletedAt
+  }
+
+  get isDeleted() {
+    return this.props.deletedAt !== undefined
+  }
+
+  delete() {
+    this.props.deletedAt = new Date()
+    this.touch()
   }
 
   private touch() {
@@ -167,7 +181,7 @@ export class Order extends AggregateRoot<OrderProps> {
   }
 
   static create(
-    props: Optional<OrderProps, 'status' | 'createdAt'>,
+    props: Optional<OrderProps, 'status' | 'createdAt' | 'deletedAt'>,
     id?: UniqueEntityId,
   ) {
     const order = new Order(

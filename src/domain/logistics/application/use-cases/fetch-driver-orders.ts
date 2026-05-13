@@ -1,3 +1,4 @@
+import { Injectable } from '@nestjs/common'
 import type { StatusOptions } from '../../enterprise/entities/values-objects/order-status'
 import type { Order } from '../../enterprise/entities/order'
 import { OrdersRepository } from '../repositories/orders-repository'
@@ -12,6 +13,7 @@ interface FetchDriverOrdersRequest {
 
 type FetchDriverOrdersResponse = Either<null, { orders: Order[] }>
 
+@Injectable()
 export class FetchDriverOrdersUseCase {
   constructor(private ordersRepository: OrdersRepository) {}
 

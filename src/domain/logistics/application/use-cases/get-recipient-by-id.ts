@@ -1,7 +1,8 @@
+import { Injectable } from '@nestjs/common'
 import { left, right, type Either } from '@/core/either'
 import { ResourceNotFoundError } from '@/core/errors/errors/resource-not-found-error'
 import type { Recipient } from '../../enterprise/entities/recipient'
-import type { RecipientsRepository } from '../repositories/recipients-repository'
+import { RecipientsRepository } from '../repositories/recipients-repository'
 
 interface GetRecipientByIdUseCaseRequest {
   recipientId: string
@@ -14,6 +15,7 @@ type GetRecipientByIdUseCaseResponse = Either<
   }
 >
 
+@Injectable()
 export class GetRecipientByIdUseCase {
   constructor(private recipientsRepository: RecipientsRepository) {}
 

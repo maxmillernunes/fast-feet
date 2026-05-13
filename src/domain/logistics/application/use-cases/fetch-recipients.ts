@@ -1,6 +1,7 @@
+import { Injectable } from '@nestjs/common'
 import { right, type Either } from '@/core/either'
 import type { Recipient } from '../../enterprise/entities/recipient'
-import type { RecipientsRepository } from '../repositories/recipients-repository'
+import { RecipientsRepository } from '../repositories/recipients-repository'
 
 interface FetchRecipientsUseCaseRequest {
   page?: number
@@ -14,6 +15,7 @@ type FetchRecipientsUseCaseResponse = Either<
   }
 >
 
+@Injectable()
 export class FetchRecipientsUseCase {
   constructor(private recipientsRepository: RecipientsRepository) {}
 
