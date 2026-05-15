@@ -29,6 +29,8 @@ model User {
   updatedAt DateTime? @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
+  orders Order[]
+
   @@map("users")
 }
 
@@ -52,9 +54,9 @@ enum OrderStatus {
 }
 
 model Recipient {
-  id           String   @id @default(uuid())
+  id           String    @id @default(uuid())
   name         String
-  document     String   @unique
+  document     String    @unique
   country      String
   zipCode      String
   state        String
@@ -64,7 +66,7 @@ model Recipient {
   complement   String?
   latitude     Float
   longitude    Float
-  createdAt    DateTime @default(now()) @map("created_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime? @updatedAt @map("updated_at")
   deletedAt    DateTime? @map("deleted_at")
 
@@ -74,17 +76,20 @@ model Recipient {
 }
 
 model Order {
-  id              String        @id @default(uuid())
-  recipientId     String
-  deliveryDriveId String?
-  status          OrderStatus   @default(CREATED)
-  createdAt       DateTime      @default(now()) @map("created_at")
-  updatedAt       DateTime?     @updatedAt @map("updated_at")
-  pickedAt        DateTime?     @map("picked_at")
-  deliveredAt     DateTime?     @map("delivered_at")
-  deletedAt       DateTime?     @map("deleted_at")
+  id              String      @id @default(uuid())
+  recipientId     String      @map("recipient_id")
+  deliveryDriveId String?     @map("delivery_driver_id")
+  status          OrderStatus @default(CREATED)
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime?   @updatedAt @map("updated_at")
+  pickedAt        DateTime?   @map("picked_at")
+  deliveredAt     DateTime?   @map("delivered_at")
+  deletedAt       DateTime?   @map("deleted_at")
 
-  recipient   Recipient        @relation(fields: [recipientId], references: [id])
+  recipient Recipient @relation(fields: [recipientId], references: [id])
+
+  deliveryDriver User? @relation(fields: [deliveryDriveId], references: [id])
+
   attachments OrderAttachment[]
 
   @@map("orders")
@@ -92,8 +97,8 @@ model Order {
 
 model OrderAttachment {
   id           String @id @default(uuid())
-  orderId      String
-  attachmentId String
+  orderId      String @map("order_id")
+  attachmentId String @map("attachment_id")
 
   order      Order      @relation(fields: [orderId], references: [id])
   attachment Attachment @relation(fields: [attachmentId], references: [id])

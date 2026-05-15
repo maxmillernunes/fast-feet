@@ -5,6 +5,7 @@ import {
   NotFoundException,
   Param,
   Post,
+  UseGuards,
 } from '@nestjs/common'
 import z from 'zod'
 import { ZodValidationPipe } from '../pipes/zod-validation-pipes'
@@ -13,6 +14,7 @@ import { OrderPresenter } from '../presenters/order-presenter'
 import { ResourceNotFoundError } from '@/core/errors/errors/resource-not-found-error'
 import { DeliveryDriverDoesNotMatchError } from '@/domain/logistics/enterprise/entities/errors/delivery-driver-does-not-match-error'
 import { OrderCanNotTransitionToDeliveryError } from '@/domain/logistics/enterprise/entities/errors/order-can-not-transition-to-delivery-error'
+import { RequireRoles } from '@/infra/auth/permission-user-decorator'
 
 const deliveryOrderBodySchema = z.object({
   deliveryDriveId: z.string(),
@@ -24,6 +26,7 @@ const bodyValidationSchema = new ZodValidationPipe(deliveryOrderBodySchema)
 type DeliveryOrderBodySchema = z.infer<typeof deliveryOrderBodySchema>
 
 @Controller('/orders')
+@UseGuards(RequireRoles('DRIVER'))
 export class DeliveryOrderController {
   constructor(private deliveryOrderUseCase: DeliveryOrderUseCase) {}
 

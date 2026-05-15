@@ -6,12 +6,14 @@ import {
   ParseFilePipe,
   Post,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 
 import { InvalidAttachmentTypeError } from '@/domain/logistics/application/use-cases/erros/invalid-attachment-type-error'
 import { UploadAndCreateAttachmentUseCase } from '@/domain/logistics/application/use-cases/upload-and-create-attachment'
+import { RequireRoles } from '@/infra/auth/permission-user-decorator'
 
 @Controller('/attachments')
 export class UploadAttachmentController {
@@ -20,6 +22,7 @@ export class UploadAttachmentController {
   ) {}
 
   @Post()
+  @UseGuards(RequireRoles('ADMIN', 'DRIVER'))
   @UseInterceptors(FileInterceptor('file'))
   async handle(
     @UploadedFile(

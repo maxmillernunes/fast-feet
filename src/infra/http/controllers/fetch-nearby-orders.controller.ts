@@ -1,8 +1,15 @@
-import { BadRequestException, Controller, Get, Query } from '@nestjs/common'
+import {
+  BadRequestException,
+  Controller,
+  Get,
+  Query,
+  UseGuards,
+} from '@nestjs/common'
 import z from 'zod'
 import { ZodValidationPipe } from '../pipes/zod-validation-pipes'
 import { FetchNearbyOrdersUseCase } from '@/domain/logistics/application/use-cases/fetch-nearby-orders'
 import { OrderPresenter } from '../presenters/order-presenter'
+import { RequireRoles } from '@/infra/auth/permission-user-decorator'
 
 const fetchNearbyOrdersQuerySchema = z.object({
   latitude: z.coerce.number(),
@@ -18,6 +25,7 @@ export class FetchNearbyOrdersController {
   constructor(private fetchNearbyOrdersUseCase: FetchNearbyOrdersUseCase) {}
 
   @Get('/nearby')
+  @UseGuards(RequireRoles('DRIVER'))
   async handle(
     @Query(QueryValidationPipe) query: FetchNearbyOrdersQuerySchema,
   ) {

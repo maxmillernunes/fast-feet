@@ -1,9 +1,16 @@
-import { BadRequestException, Controller, Get, Query } from '@nestjs/common'
+import {
+  BadRequestException,
+  Controller,
+  Get,
+  Query,
+  UseGuards,
+} from '@nestjs/common'
 import z from 'zod'
 import { ZodValidationPipe } from '../pipes/zod-validation-pipes'
 import { FetchDriverOrdersUseCase } from '@/domain/logistics/application/use-cases/fetch-driver-orders'
 import type { StatusOptions } from '@/domain/logistics/enterprise/entities/values-objects/order-status'
 import { OrderPresenter } from '../presenters/order-presenter'
+import { RequireRoles } from '@/infra/auth/permission-user-decorator'
 
 const fetchDriverOrdersQuerySchema = z.object({
   driverId: z.string(),
@@ -31,6 +38,7 @@ export class FetchDriverOrdersController {
   constructor(private fetchDriverOrdersUseCase: FetchDriverOrdersUseCase) {}
 
   @Get('/driver')
+  @UseGuards(RequireRoles('DRIVER'))
   async handle(
     @Query(QueryValidationPipe) query: FetchDriverOrdersQuerySchema,
   ) {

@@ -4,6 +4,7 @@ import {
   ConflictException,
   Controller,
   Post,
+  UseGuards,
 } from '@nestjs/common'
 import z from 'zod'
 import { ZodValidationPipe } from '../pipes/zod-validation-pipes'
@@ -11,6 +12,7 @@ import { RegisterRecipientUseCase } from '@/domain/logistics/application/use-cas
 import { RecipientPresenter } from '../presenters/recipient-presenter'
 import { DocumentInvalidError } from '@/domain/logistics/enterprise/entities/errors/document-invalid-error'
 import { ResourceAlreadyExistsError } from '@/core/errors/errors/resource-already-exists-error'
+import { RequireRoles } from '@/infra/auth/permission-user-decorator'
 
 const registerRecipientBodySchema = z.object({
   name: z.string(),
@@ -35,6 +37,7 @@ export class RegisterRecipientController {
   constructor(private registerRecipientUseCase: RegisterRecipientUseCase) {}
 
   @Post()
+  @UseGuards(RequireRoles('ADMIN'))
   async handle(@Body(bodyValidationSchema) body: RegisterRecipientBodySchema) {
     const {
       name,

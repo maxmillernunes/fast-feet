@@ -1,8 +1,15 @@
-import { BadRequestException, Controller, Get, Query } from '@nestjs/common'
+import {
+  BadRequestException,
+  Controller,
+  Get,
+  Query,
+  UseGuards,
+} from '@nestjs/common'
 import z from 'zod'
 import { ZodValidationPipe } from '../pipes/zod-validation-pipes'
 import { FetchRecipientsUseCase } from '@/domain/logistics/application/use-cases/fetch-recipients'
 import { RecipientPresenter } from '../presenters/recipient-presenter'
+import { RequireRoles } from '@/infra/auth/permission-user-decorator'
 
 const pageQueryParamSchema = z.object({
   page: z
@@ -28,6 +35,7 @@ export class FetchRecipientsController {
   constructor(private fetchRecipientsUseCase: FetchRecipientsUseCase) {}
 
   @Get()
+  @UseGuards(RequireRoles('ADMIN'))
   async handle(@Query(QueryValidationPipe) query: PageQueryParamSchema) {
     const { page, perPage } = query
 

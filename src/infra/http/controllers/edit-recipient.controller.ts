@@ -5,6 +5,7 @@ import {
   NotFoundException,
   Param,
   Patch,
+  UseGuards,
 } from '@nestjs/common'
 import z from 'zod'
 import { ZodValidationPipe } from '../pipes/zod-validation-pipes'
@@ -12,6 +13,7 @@ import { EditRecipientUseCase } from '@/domain/logistics/application/use-cases/e
 import { RecipientPresenter } from '../presenters/recipient-presenter'
 import { DocumentInvalidError } from '@/domain/logistics/enterprise/entities/errors/document-invalid-error'
 import { ResourceNotFoundError } from '@/core/errors/errors/resource-not-found-error'
+import { RequireRoles } from '@/infra/auth/permission-user-decorator'
 
 const editRecipientBodySchema = z.object({
   name: z.string(),
@@ -36,6 +38,7 @@ export class EditRecipientController {
   constructor(private editRecipientUseCase: EditRecipientUseCase) {}
 
   @Patch(':id')
+  @UseGuards(RequireRoles('ADMIN'))
   async handle(
     @Param('id') id: string,
     @Body(bodyValidationSchema) body: EditRecipientBodySchema,

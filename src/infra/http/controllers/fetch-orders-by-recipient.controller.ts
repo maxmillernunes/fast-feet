@@ -4,11 +4,13 @@ import {
   Get,
   Param,
   Query,
+  UseGuards,
 } from '@nestjs/common'
 import z from 'zod'
 import { ZodValidationPipe } from '../pipes/zod-validation-pipes'
 import { FetchRecentOrdersUseCase } from '@/domain/logistics/application/use-cases/fetch-orders-by-recipient-id'
 import { OrderPresenter } from '../presenters/order-presenter'
+import { RequireRoles } from '@/infra/auth/permission-user-decorator'
 
 const pageQueryParamSchema = z.object({
   page: z
@@ -36,6 +38,7 @@ export class FetchOrdersByRecipientController {
   ) {}
 
   @Get('/recipient/:recipientId')
+  @UseGuards(RequireRoles('ADMIN'))
   async handle(
     @Param('recipientId') recipientId: string,
     @Query(QueryValidationPipe) query: PageQueryParamSchema,

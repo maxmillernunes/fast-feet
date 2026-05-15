@@ -1,8 +1,15 @@
-import { BadRequestException, Controller, Get, Query } from '@nestjs/common'
+import {
+  BadRequestException,
+  Controller,
+  Get,
+  Query,
+  UseGuards,
+} from '@nestjs/common'
 import z from 'zod'
 import { ZodValidationPipe } from '../pipes/zod-validation-pipes'
 import { FetchRecentOrdersUseCase } from '@/domain/logistics/application/use-cases/fetch-recent-orders'
 import { OrderPresenter } from '../presenters/order-presenter'
+import { RequireRoles } from '@/infra/auth/permission-user-decorator'
 
 const pageQueryParamSchema = z.object({
   page: z
@@ -28,6 +35,7 @@ export class FetchRecentOrdersController {
   constructor(private fetchRecentOrdersUseCase: FetchRecentOrdersUseCase) {}
 
   @Get()
+  @UseGuards(RequireRoles('ADMIN'))
   async handle(@Query(QueryValidationPipe) query: PageQueryParamSchema) {
     const { page, perPage } = query
 

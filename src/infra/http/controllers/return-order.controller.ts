@@ -5,6 +5,7 @@ import {
   NotFoundException,
   Param,
   Post,
+  UseGuards,
 } from '@nestjs/common'
 import z from 'zod'
 import { ZodValidationPipe } from '../pipes/zod-validation-pipes'
@@ -13,6 +14,7 @@ import { OrderPresenter } from '../presenters/order-presenter'
 import { ResourceNotFoundError } from '@/core/errors/errors/resource-not-found-error'
 import { DeliveryDriverDoesNotMatchError } from '@/domain/logistics/enterprise/entities/errors/delivery-driver-does-not-match-error'
 import { OrderCanNotTransitionToReturnedError } from '@/domain/logistics/enterprise/entities/errors/order-can-not-transition-to-returned-error'
+import { RequireRoles } from '@/infra/auth/permission-user-decorator'
 
 const returnOrderBodySchema = z.object({
   deliveryDriveId: z.string(),
@@ -27,6 +29,7 @@ export class ReturnOrderController {
   constructor(private returnOrderUseCase: ReturnOrderUseCase) {}
 
   @Post(':id/return')
+  @UseGuards(RequireRoles('DRIVER'))
   async handle(
     @Param('id') id: string,
     @Body(bodyValidationSchema) body: ReturnOrderBodySchema,
