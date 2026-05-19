@@ -54,7 +54,7 @@ describe('Pickup Order (e2e)', () => {
     const response = await request(app.getHttpServer())
       .post(`/orders/${order.id.toString()}/pickup`)
       .set('Authorization', `Bearer ${token}`)
-      .send({ deliveryDriveId: driver.id.toString() })
+      .send()
 
     expect(response.status).toBe(201)
     expect(response.body.order.status).toBe('PICKED_UP')

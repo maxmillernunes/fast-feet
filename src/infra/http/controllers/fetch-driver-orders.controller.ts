@@ -11,9 +11,10 @@ import { FetchDriverOrdersUseCase } from '@/domain/logistics/application/use-cas
 import type { StatusOptions } from '@/domain/logistics/enterprise/entities/values-objects/order-status'
 import { OrderPresenter } from '../presenters/order-presenter'
 import { RequireRoles } from '@/infra/auth/permission-user-decorator'
+import { CurrentUser } from '@/infra/auth/current-user-decorator'
+import type { UserPayload } from '@/infra/auth/jwt.strategy'
 
 const fetchDriverOrdersQuerySchema = z.object({
-  driverId: z.string(),
   status: z.string().transform((val) => val.split(',') as StatusOptions[]),
   page: z
     .string()
@@ -41,11 +42,13 @@ export class FetchDriverOrdersController {
   @UseGuards(RequireRoles('DRIVER'))
   async handle(
     @Query(QueryValidationPipe) query: FetchDriverOrdersQuerySchema,
+    @CurrentUser() user: UserPayload,
   ) {
-    const { driverId, status, page, perPage } = query
+    const { status, page, perPage } = query
+    const { sub } = user
 
     const result = await this.fetchDriverOrdersUseCase.execute({
-      driverId,
+      driverId: sub,
       status,
       page,
       perPage,

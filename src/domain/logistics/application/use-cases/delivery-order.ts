@@ -1,13 +1,16 @@
 import { Injectable } from '@nestjs/common'
 import { UniqueEntityId } from '@/core/entities/unique-entity-id'
 import { OrdersRepository } from '../repositories/orders-repository'
+import { AttachmentsRepository } from '../repositories/attachments-repository'
+import { OrderAttachment } from '../../enterprise/entities/order-attachment'
+import { OrderAttachmentList } from '../../enterprise/entities/order-attachment-list'
 import type { Order } from '../../enterprise/entities/order'
 import { left, right, type Either } from '@/core/either'
 import { ResourceNotFoundError } from '@/core/errors/errors/resource-not-found-error'
+import { InvalidAttachmentSentError } from './erros/invalid-attachment-sent-error'
 import type { DeliveryDriverDoesNotMatchError } from '../../enterprise/entities/errors/delivery-driver-does-not-match-error'
 import type { OrderCanNotTransitionToDeliveryError } from '@/domain/logistics/enterprise/entities/errors/order-can-not-transition-to-delivery-error'
 import type { OrderCanNotTransitionToReturnedError } from '@/domain/logistics/enterprise/entities/errors/order-can-not-transition-to-returned-error'
-import { OrderAttachment } from '../../enterprise/entities/order-attachment'
 
 interface DeliveryOrderUseCaseRequest {
   orderId: string
@@ -19,7 +22,8 @@ type DeliveryOrderUseCaseResponse = Either<
   | ResourceNotFoundError
   | DeliveryDriverDoesNotMatchError
   | OrderCanNotTransitionToDeliveryError
-  | OrderCanNotTransitionToReturnedError,
+  | OrderCanNotTransitionToReturnedError
+  | InvalidAttachmentSentError,
   {
     order: Order
   }
@@ -27,7 +31,10 @@ type DeliveryOrderUseCaseResponse = Either<
 
 @Injectable()
 export class DeliveryOrderUseCase {
-  constructor(private ordersRepository: OrdersRepository) {}
+  constructor(
+    private ordersRepository: OrdersRepository,
+    private attachmentsRepository: AttachmentsRepository,
+  ) {}
 
   async execute({
     deliveryDriveId,
@@ -40,6 +47,16 @@ export class DeliveryOrderUseCase {
       return left(new ResourceNotFoundError())
     }
 
+    const existingAttachmentsPromise = attachmentIds.map((attachmentId) => {
+      return this.attachmentsRepository.findById(attachmentId)
+    })
+
+    const existingAttachments = await Promise.all(existingAttachmentsPromise)
+
+    if (existingAttachments.some((attachment) => !attachment)) {
+      return left(new InvalidAttachmentSentError())
+    }
+
     const orderAttachments = attachmentIds.map((attachmentId) => {
       return OrderAttachment.create({
         attachmentId: new UniqueEntityId(attachmentId),
@@ -49,7 +66,7 @@ export class DeliveryOrderUseCase {
 
     const result = order.deliver(
       new UniqueEntityId(deliveryDriveId),
-      orderAttachments,
+      new OrderAttachmentList(orderAttachments),
     )
 
     if (result.isLeft()) {

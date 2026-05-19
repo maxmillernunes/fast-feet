@@ -1,27 +1,18 @@
 import {
   BadRequestException,
-  Body,
   Controller,
   NotFoundException,
   Param,
   Post,
   UseGuards,
 } from '@nestjs/common'
-import z from 'zod'
-import { ZodValidationPipe } from '../pipes/zod-validation-pipes'
 import { PickUpOrderUseCase } from '@/domain/logistics/application/use-cases/pickup-order'
 import { OrderPresenter } from '../presenters/order-presenter'
 import { ResourceNotFoundError } from '@/core/errors/errors/resource-not-found-error'
 import { OrderCanNotTransitionToPickUpError } from '@/domain/logistics/enterprise/entities/errors/order-can-not-transition-to-pickup-error'
 import { RequireRoles } from '@/infra/auth/permission-user-decorator'
-
-const pickupOrderBodySchema = z.object({
-  deliveryDriveId: z.string(),
-})
-
-const bodyValidationSchema = new ZodValidationPipe(pickupOrderBodySchema)
-
-type PickUpOrderBodySchema = z.infer<typeof pickupOrderBodySchema>
+import { CurrentUser } from '@/infra/auth/current-user-decorator'
+import type { UserPayload } from '@/infra/auth/jwt.strategy'
 
 @Controller('/orders')
 export class PickUpOrderController {
@@ -29,15 +20,12 @@ export class PickUpOrderController {
 
   @Post(':id/pickup')
   @UseGuards(RequireRoles('DRIVER'))
-  async handle(
-    @Param('id') id: string,
-    @Body(bodyValidationSchema) body: PickUpOrderBodySchema,
-  ) {
-    const { deliveryDriveId } = body
+  async handle(@Param('id') id: string, @CurrentUser() user: UserPayload) {
+    const { sub } = user
 
     const result = await this.pickUpOrderUseCase.execute({
       orderId: id,
-      deliveryDriveId,
+      deliveryDriveId: sub,
     })
 
     if (result.isLeft()) {

@@ -7,6 +7,9 @@ export class OrderPresenter {
       status: order.status.getContent(),
       recipientId: order.recipientId.toString(),
       deliveryDriveId: order.deliveryDriveId?.toString(),
+      attachments: order.attachments.getItems().map((attachment) => ({
+        id: attachment.id.toString(),
+      })),
       createdAt: order.createdAt,
       updatedAt: order.updatedAt,
       pickedAt: order.pickedAt,

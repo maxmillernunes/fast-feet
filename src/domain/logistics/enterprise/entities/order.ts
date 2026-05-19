@@ -12,13 +12,13 @@ import { OrderCreatedEvent } from '../events/order-created-event'
 import { OrderDeliveredEvent } from '../events/order-delivered-event'
 import { OrderMarkedAsAwaitingEvent } from '../events/order-marked-as-awaiting-events'
 import { OrderPickedUpEvent } from '../events/order-picked-up-event'
-import type { OrderAttachment } from './order-attachment'
+import { OrderAttachmentList } from './order-attachment-list'
 
 export interface OrderProps {
   recipientId: UniqueEntityId
   deliveryDriveId?: UniqueEntityId
   status: OrderStatus
-  attachments?: OrderAttachment[]
+  attachments: OrderAttachmentList
   createdAt: Date
   updatedAt?: Date
   pickedAt?: Date
@@ -81,13 +81,20 @@ export class Order extends AggregateRoot<OrderProps> {
     return this.props.deletedAt !== undefined
   }
 
-  delete() {
-    this.props.deletedAt = new Date()
+  private touch() {
+    this.props.updatedAt = new Date()
+  }
+
+  set recipientId(recipientId: UniqueEntityId) {
+    this.props.recipientId = recipientId
+
     this.touch()
   }
 
-  private touch() {
-    this.props.updatedAt = new Date()
+  delete() {
+    this.props.deletedAt = new Date()
+
+    this.touch()
   }
 
   /**
@@ -114,7 +121,7 @@ export class Order extends AggregateRoot<OrderProps> {
 
   deliver(
     driverId: UniqueEntityId,
-    attachments: OrderAttachment[],
+    attachments: OrderAttachmentList,
   ): DeliveryOrder {
     if (
       this.props.deliveryDriveId &&
@@ -174,14 +181,11 @@ export class Order extends AggregateRoot<OrderProps> {
     return right(null)
   }
 
-  set recipientId(recipientId: UniqueEntityId) {
-    this.props.recipientId = recipientId
-
-    this.touch()
-  }
-
   static create(
-    props: Optional<OrderProps, 'status' | 'createdAt' | 'deletedAt'>,
+    props: Optional<
+      OrderProps,
+      'status' | 'createdAt' | 'deletedAt' | 'attachments'
+    >,
     id?: UniqueEntityId,
   ) {
     const order = new Order(
@@ -189,6 +193,7 @@ export class Order extends AggregateRoot<OrderProps> {
         ...props,
         status: props.status ?? OrderStatus.create(),
         createdAt: props.createdAt ?? new Date(),
+        attachments: props.attachments ?? new OrderAttachmentList(),
       },
       id,
     )

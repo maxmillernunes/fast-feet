@@ -35,12 +35,14 @@ model User {
 }
 
 model Attachment {
-  id        String   @id @default(uuid())
+  id        String    @id @default(uuid())
   title     String
   url       String
-  createdAt DateTime @default(now()) @map("created_at")
+  orderId   String?   @map("order_id")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
 
-  orders OrderAttachment[]
+  order Order? @relation(fields: [orderId], references: [id])
 
   @@map("attachments")
 }
@@ -90,18 +92,7 @@ model Order {
 
   deliveryDriver User? @relation(fields: [deliveryDriveId], references: [id])
 
-  attachments OrderAttachment[]
+  attachments Attachment[]
 
   @@map("orders")
-}
-
-model OrderAttachment {
-  id           String @id @default(uuid())
-  orderId      String @map("order_id")
-  attachmentId String @map("attachment_id")
-
-  order      Order      @relation(fields: [orderId], references: [id])
-  attachment Attachment @relation(fields: [attachmentId], references: [id])
-
-  @@map("order_attachments")
 }

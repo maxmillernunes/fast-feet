@@ -15,20 +15,4 @@ export class InMemoryOrderAttachmentsRepository implements OrderAttachmentsRepos
 
     this.items = orderAttachments
   }
-
-  async findManyByOrderId(orderId: string) {
-    const orderAttachments = this.items.filter(
-      (item) => item.orderId.toString() === orderId,
-    )
-
-    return orderAttachments
-  }
-
-  async deleteManyByOrderId(orderId: string) {
-    const orderAttachments = this.items.filter(
-      (item) => item.orderId.toString() !== orderId,
-    )
-
-    this.items = orderAttachments
-  }
 }

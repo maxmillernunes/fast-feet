@@ -1,28 +1,38 @@
 import { UniqueEntityId } from '@/core/entities/unique-entity-id'
 import { OrderAttachment } from '@/domain/logistics/enterprise/entities/order-attachment'
-import {
-  Prisma,
-  OrderAttachment as PrismaOrderAttachment,
-} from '../client/client'
+import { Prisma, Attachment as PrismaAttachment } from '../client/client'
 
 export class PrismaOrderAttachmentMapper {
-  static toDomain(raw: PrismaOrderAttachment): OrderAttachment {
+  static toDomain(raw: PrismaAttachment): OrderAttachment {
+    if (!raw.orderId) {
+      throw new Error('Invalid attachment type: orderId is required')
+    }
+
     return OrderAttachment.create(
       {
         orderId: new UniqueEntityId(raw.orderId),
-        attachmentId: new UniqueEntityId(raw.attachmentId),
+        attachmentId: new UniqueEntityId(raw.id),
       },
       new UniqueEntityId(raw.id),
     )
   }
 
-  static toPrisma(
-    orderAttachment: OrderAttachment,
-  ): Prisma.OrderAttachmentUncheckedCreateInput {
+  static toPrismaUpdateMany(
+    orderAttachments: OrderAttachment[],
+  ): Prisma.AttachmentUpdateManyArgs {
+    const attachmentIds = orderAttachments.map((attachment) =>
+      attachment.attachmentId.toString(),
+    )
+
     return {
-      id: orderAttachment.id.toString(),
-      orderId: orderAttachment.orderId.toString(),
-      attachmentId: orderAttachment.attachmentId.toString(),
+      where: {
+        id: {
+          in: attachmentIds,
+        },
+      },
+      data: {
+        orderId: orderAttachments[0].orderId.toString(),
+      },
     }
   }
 }

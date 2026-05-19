@@ -58,7 +58,7 @@ describe('Fetch Driver Orders (e2e)', () => {
 
     const response = await request(app.getHttpServer())
       .get('/orders/driver')
-      .query({ driverId: driver.id.toString(), status: 'PICKED_UP' })
+      .query({ status: 'PICKED_UP' })
       .set('Authorization', `Bearer ${token}`)
 
     expect(response.status).toBe(200)
