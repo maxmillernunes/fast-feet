@@ -1,51 +1,59 @@
 services:
   app:
-    container_name: api
+    container_name: api-dev
     build:
       context: .
-      target: prod
+      target: dev
     ports:
       - "${PORT}:${PORT}"
     env_file:
-      - .env
+      - .env.development
     depends_on:
       postgres:
         condition: service_healthy
       ministack:
         condition: service_started
     restart: unless-stopped
+    volumes:
+      - ./src:/app/src
+      - ./prisma:/app/prisma
+      - ./scripts:/app/scripts
+      - ./package.json:/app/package.json
+      - ./pnpm-lock.yaml:/app/pnpm-lock.yaml
+      - ./entrypoint.sh:/app/entrypoint.sh:cached
+      - /app/node_modules
     networks:
-      - fast-feet-network
+      - fast-feet-network-dev
 
   postgres:
-    container_name: database
+    container_name: database-dev
     image: postgres
     restart: unless-stopped
     env_file:
-      - .env
+      - .env.development
     ports:
       - "${POSTGRES_PORT}:5432"
     volumes:
-      - pgdata:/var/lib/postgresql
+      - pgdata-dev:/var/lib/postgresql
     healthcheck:
       test: pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}
       interval: 5s
       retries: 5
     networks:
-      - fast-feet-network
+      - fast-feet-network-dev
 
   ministack:
-    container_name: ministack
+    container_name: ministack-dev
     image: ministackorg/ministack
     restart: unless-stopped
     ports:
       - "4566:4566"
     networks:
-      - fast-feet-network
+      - fast-feet-network-dev
 
 volumes:
-  pgdata:
+  pgdata-dev:
 
 networks:
-  fast-feet-network:
+  fast-feet-network-dev:
     driver: bridge
