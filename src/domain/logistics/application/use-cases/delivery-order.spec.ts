@@ -9,11 +9,12 @@ import { InMemoryRecipientsRepository } from '@test/repositories/in-memory-recip
 import { UniqueEntityId } from '@/core/entities/unique-entity-id'
 import { InMemoryAttachmentsRepository } from '@test/repositories/in-memory-attachments-repository'
 import { InMemoryOrderAttachmentsRepository } from '@test/repositories/in-memory-order-attachments-repository'
+import { makeAttachment } from '@test/factories/make-attachment'
 
 let inMemoryOrderAttachmentsRepository: InMemoryOrderAttachmentsRepository
 let inMemoryAttachmentsRepository: InMemoryAttachmentsRepository
-let recipientRepository: InMemoryRecipientsRepository
-let ordersRepository: InMemoryOrdersRepository
+let inMemoryRecipientRepository: InMemoryRecipientsRepository
+let inMemoryOrdersRepository: InMemoryOrdersRepository
 let sut: DeliveryOrderUseCase
 
 describe('Delivery Order', () => {
@@ -21,13 +22,16 @@ describe('Delivery Order', () => {
     inMemoryOrderAttachmentsRepository =
       new InMemoryOrderAttachmentsRepository()
     inMemoryAttachmentsRepository = new InMemoryAttachmentsRepository()
-    recipientRepository = new InMemoryRecipientsRepository()
-    ordersRepository = new InMemoryOrdersRepository(
+    inMemoryRecipientRepository = new InMemoryRecipientsRepository()
+    inMemoryOrdersRepository = new InMemoryOrdersRepository(
       inMemoryOrderAttachmentsRepository,
       inMemoryAttachmentsRepository,
-      recipientRepository,
+      inMemoryRecipientRepository,
     )
-    sut = new DeliveryOrderUseCase(ordersRepository)
+    sut = new DeliveryOrderUseCase(
+      inMemoryOrdersRepository,
+      inMemoryAttachmentsRepository,
+    )
   })
 
   it('should be able to deliver an order', async () => {
@@ -35,12 +39,18 @@ describe('Delivery Order', () => {
       deliveryDriveId: new UniqueEntityId('driver-1'),
       status: OrderStatus.create('PICKED_UP'),
     })
-    await ordersRepository.create(order)
+    await inMemoryOrdersRepository.create(order)
+
+    const attachment1 = makeAttachment()
+    const attachment2 = makeAttachment()
+
+    await inMemoryAttachmentsRepository.create(attachment1)
+    await inMemoryAttachmentsRepository.create(attachment2)
 
     const result = await sut.execute({
       deliveryDriveId: 'driver-1',
       orderId: order.id.toString(),
-      attachmentIds: ['1', '2'],
+      attachmentIds: [attachment1.id.toString(), attachment2.id.toString()],
     })
 
     expect(result.isRight()).toBe(true)
@@ -56,10 +66,10 @@ describe('Delivery Order', () => {
     expect(inMemoryOrderAttachmentsRepository.items).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          attachmentId: new UniqueEntityId('1'),
+          attachmentId: attachment1.id,
         }),
         expect.objectContaining({
-          attachmentId: new UniqueEntityId('2'),
+          attachmentId: attachment2.id,
         }),
       ]),
     )
@@ -77,16 +87,22 @@ describe('Delivery Order', () => {
   })
 
   it('should not be able to deliver an order when status is WAITING', async () => {
+    const attachment1 = makeAttachment()
+    const attachment2 = makeAttachment()
+
+    await inMemoryAttachmentsRepository.create(attachment1)
+    await inMemoryAttachmentsRepository.create(attachment2)
+
     const order = makeOrder({
       deliveryDriveId: new UniqueEntityId('driver-1'),
       status: OrderStatus.create('WAITING'),
     })
-    await ordersRepository.create(order)
+    await inMemoryOrdersRepository.create(order)
 
     const result = await sut.execute({
       deliveryDriveId: 'driver-1',
       orderId: order.id.toString(),
-      attachmentIds: ['1', '2'],
+      attachmentIds: [attachment1.id.toString(), attachment2.id.toString()],
     })
 
     expect(result.isLeft()).toBe(true)
@@ -94,16 +110,22 @@ describe('Delivery Order', () => {
   })
 
   it('should not be able to deliver an order when the delivery driver does not match', async () => {
+    const attachment1 = makeAttachment()
+    const attachment2 = makeAttachment()
+
+    await inMemoryAttachmentsRepository.create(attachment1)
+    await inMemoryAttachmentsRepository.create(attachment2)
+
     const order = makeOrder({
       deliveryDriveId: new UniqueEntityId('driver-1'),
       status: OrderStatus.create('PICKED_UP'),
     })
-    await ordersRepository.create(order)
+    await inMemoryOrdersRepository.create(order)
 
     const result = await sut.execute({
       deliveryDriveId: 'driver-2',
       orderId: order.id.toString(),
-      attachmentIds: ['1', '2'],
+      attachmentIds: [attachment1.id.toString(), attachment2.id.toString()],
     })
 
     expect(result.isLeft()).toBe(true)

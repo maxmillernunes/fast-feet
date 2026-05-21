@@ -142,11 +142,9 @@ export class InMemoryOrdersRepository implements OrdersRepository {
   async save(order: Order): Promise<void> {
     const orderIndex = this.items.findIndex((item) => item.id.equals(order.id))
 
-    if (order.attachments && order.attachments.length) {
-      await this.orderAttachmentsRepository.createMany(
-        order.attachments.map((attachment) => attachment),
-      )
-    }
+    await this.orderAttachmentsRepository.createMany(
+      order.attachments.getItems(),
+    )
 
     this.items[orderIndex] = order
 

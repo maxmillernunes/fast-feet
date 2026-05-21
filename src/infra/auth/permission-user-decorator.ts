@@ -8,15 +8,13 @@ import {
 } from '@nestjs/common'
 import { Request } from 'express'
 import { UsersRepository } from '@/domain/iam/application/repositories/users-repository'
+import type { UserPayload } from './jwt.strategy'
 
 // Define os tipos de roles possíveis na sua aplicação
 type RoleType = 'ADMIN' | 'DRIVER'
 
-interface RequestWithUser extends Request {
-  user: {
-    sub: string // ID do usuário no JWT
-    [key: string]: any
-  }
+export interface RequestWithUser extends Request {
+  user: UserPayload
 }
 
 export const RequireRoles = (
@@ -27,7 +25,7 @@ export const RequireRoles = (
     constructor(private usersRepository: UsersRepository) {}
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
-      const request = context.switchToHttp().getRequest()
+      const request = context.switchToHttp().getRequest<RequestWithUser>()
       const user = request.user
 
       if (!user) {

@@ -128,9 +128,25 @@ pnpm prisma migrate dev                  # Aplica migrations
 ### Executando
 
 ```bash
-pnpm start:dev      # Desenvolvimento (watch mode)
-pnpm start:prod     # Produção
+docker compose -f docker-compose.dev.yml up --build         # Desenvolvimento hot reload(watch mode)
+docker compose up -d --build                                # Like Produção
 ```
+
+---
+
+### Testes
+
+- **Unitários**: Use cases testados com repositórios in-memory e fakes (`vitest`)
+- **E2E**: Controllers testados com Supertest + PostgreSQL isolado (schema UUID por execução)
+- - **PS**: S3 local `pnpm tsx scripts/create-bucket-test.ts`
+
+```bash
+pnpm test          # Unitários
+pnpm test:cov      # Com cobertura
+pnpm test:e2e      # E2E (requer docker compose up)
+```
+
+---
 
 ### Scripts
 
@@ -261,19 +277,6 @@ src/
 - **SOLID** — Interfaces segregadas, injeção de dependência, responsabilidade única
 - **Functional Error Handling** — `Either<Error, Success>` em todos os use cases
 - **Soft Delete** — Remoção lógica com `deletedAt`
-
----
-
-## Testes
-
-- **Unitários**: Use cases testados com repositórios in-memory e fakes (`vitest`)
-- **E2E**: Controllers testados com Supertest + PostgreSQL isolado (schema UUID por execução)
-
-```bash
-pnpm test          # Unitários
-pnpm test:cov      # Com cobertura
-pnpm test:e2e      # E2E (requer docker compose up)
-```
 
 ---
 

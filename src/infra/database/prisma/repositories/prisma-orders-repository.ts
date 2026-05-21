@@ -149,19 +149,23 @@ export class PrismaOrdersRepository implements OrdersRepository {
   async save(order: Order): Promise<void> {
     const data = PrismaOrderMapper.toPrisma(order)
 
-    await Promise.all([
-      this.prisma.order.update({
-        where: {
-          id: data.id,
-        },
-        data,
-      }),
+    await this.prisma.order.update({
+      where: {
+        id: data.id,
+      },
+      data,
+    })
 
-      this.orderAttachmentsRepository.createMany(order.attachments.getItems()),
-      this.orderAttachmentsRepository.deleteMany(
-        order.attachments.getRemovedItems(),
-      ),
-    ])
+    if (order.attachments.currentItems.length) {
+      await Promise.all([
+        this.orderAttachmentsRepository.createMany(
+          order.attachments.getItems(),
+        ),
+        this.orderAttachmentsRepository.deleteMany(
+          order.attachments.getRemovedItems(),
+        ),
+      ])
+    }
 
     DomainEvents.dispatchEventsForAggregate(order.id)
   }

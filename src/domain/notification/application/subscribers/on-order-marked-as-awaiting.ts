@@ -3,7 +3,9 @@ import type { EventHandler } from '@/core/events/event-handler'
 import { RecipientsRepository } from '@/domain/logistics/application/repositories/recipients-repository'
 import { OrderMarkedAsAwaitingEvent } from '@/domain/logistics/enterprise/events/order-marked-as-awaiting-events'
 import { SendNotificationUseCase } from '../use-cases/send-notification'
+import { Injectable } from '@nestjs/common'
 
+@Injectable()
 export class OnOrderMarkedAsAwaiting implements EventHandler {
   constructor(
     private recipientsRepository: RecipientsRepository,

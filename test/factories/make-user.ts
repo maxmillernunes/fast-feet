@@ -41,7 +41,7 @@ export class UserFactory {
   async makePrismaUser(data: Partial<UserProps> = {}): Promise<User> {
     const user = makeUser(data)
 
-    const password = data.password || DEFAULT_PASSWORD
+    const password = data.password?.value || DEFAULT_PASSWORD
     const hashedPassword = await hash(password, 10)
 
     await this.prisma.user.create({

@@ -15,6 +15,9 @@ import { makeRecipient } from '@test/factories/make-recipient'
 import { waitFor } from '@test/utils/wait-for'
 import { InMemoryOrderAttachmentsRepository } from '@test/repositories/in-memory-order-attachments-repository'
 import { InMemoryAttachmentsRepository } from '@test/repositories/in-memory-attachments-repository'
+import { makeAttachment } from '@test/factories/make-attachment'
+import { OrderAttachmentList } from '@/domain/logistics/enterprise/entities/order-attachment-list'
+import { OrderAttachment } from '@/domain/logistics/enterprise/entities/order-attachment'
 
 let inMemoryOrderAttachmentsRepository: InMemoryOrderAttachmentsRepository
 let inMemoryAttachmentsRepository: InMemoryAttachmentsRepository
@@ -62,6 +65,13 @@ describe('On Order Delivered', () => {
     const order = makeOrder({ recipientId: recipient.id })
     inMemoryOrdersRepository.create(order)
 
+    const attachment = makeAttachment()
+    await inMemoryAttachmentsRepository.create(attachment)
+    const orderAttachment = OrderAttachment.create({
+      orderId: order.id,
+      attachmentId: attachment.id,
+    })
+
     order.markAsAwaiting()
     await inMemoryOrdersRepository.save(order)
 
@@ -69,7 +79,7 @@ describe('On Order Delivered', () => {
     order.pickUp(deliveryDriverId)
     await inMemoryOrdersRepository.save(order)
 
-    order.deliver(deliveryDriverId, [])
+    order.deliver(deliveryDriverId, new OrderAttachmentList([orderAttachment]))
     await inMemoryOrdersRepository.save(order)
 
     await waitFor(() => {
