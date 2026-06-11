@@ -25,9 +25,26 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
+      
+      ministack:
+        image: ministackorg/ministack:latest
+        ports:
+          - 4566:4566
+        volumes:
+          - /var/run/docker.sock:/var/run/docker.sock
+        options: >-
+          --health-cmd "curl -f http://localhost:4566/_ministack/health || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     env:
       DATABASE_URL: "postgresql://user:password@localhost:5432/fast-feet?schema=public"
+      AWS_REGION: "us-east-2"
+      AWS_ACCESS_KEY_ID: "test"
+      AWS_SECRET_ACCESS_KEY: "test"
+      AWS_S3_BUCKET: "fast-feet"
+      AWS_ENDPOINT: "http://localhost:4566" 
 
     steps:
       - name: Checkout code
@@ -52,3 +69,10 @@ jobs:
 
       - name: Unit tests
         run: pnpm test
+
+      - name: Create S3 Buckets to run E2E tests
+        run: |
+          aws --endpoint-url=http://localhost:4566 s3 mb s3://fast-feet
+
+      - name: E2E Tests
+        run: pnpm test:e2e
