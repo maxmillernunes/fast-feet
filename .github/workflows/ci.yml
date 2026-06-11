@@ -32,12 +32,6 @@ jobs:
           - 4566:4566
         volumes:
           - /var/run/docker.sock:/var/run/docker.sock
-        options: >-
-          --health-cmd "sh -c 'curl -f http://localhost:4566/_ministack/health || exit 1'"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 5
-          --health-start-period 10s
 
     env:
       DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/fast-feet?schema=public"
@@ -70,6 +64,20 @@ jobs:
 
       - name: Unit tests
         run: pnpm test
+
+      - name: Wait for MiniStack to be ready
+        run: |
+          echo "Aguardando o MiniStack iniciar..."
+          for i in {1..30}; do
+            if curl -f http://localhost:4566/_ministack/health > /dev/null 2>&1; then
+              echo "MiniStack está pronto!"
+              exit 0
+            fi
+            echo "Tentativa $i/30: aguardando..."
+            sleep 2
+          done
+          echo "Erro: MiniStack não ficou pronto a tempo."
+          exit 1
 
       - name: Create S3 Buckets to run E2E tests
         run: |
