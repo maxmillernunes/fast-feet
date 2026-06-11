@@ -15,8 +15,8 @@ jobs:
       postgres:
         image: postgres
         env:
-          POSTGRES_USER: user
-          POSTGRES_PASSWORD: password
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
           POSTGRES_DB: fast-feet
         options: >-
           --health-cmd pg_isready
@@ -25,7 +25,7 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
-      
+
       ministack:
         image: ministackorg/ministack:latest
         ports:
@@ -34,12 +34,13 @@ jobs:
           - /var/run/docker.sock:/var/run/docker.sock
         options: >-
           --health-cmd "curl -f http://localhost:4566/_ministack/health || exit 1"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-interval 15s
+          --health-timeout 10s
+          --health-retries 10
+          --health-start-period 30s
 
     env:
-      DATABASE_URL: "postgresql://user:password@localhost:5432/fast-feet?schema=public"
+      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/fast-feet?schema=public"
       AWS_REGION: "us-east-2"
       AWS_ACCESS_KEY_ID: "test"
       AWS_SECRET_ACCESS_KEY: "test"
