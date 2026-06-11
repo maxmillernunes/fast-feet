@@ -11,6 +11,24 @@ jobs:
     name: Build and push
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: fast-feet
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    env:
+      DATABASE_URL: "postgresql://user:password@localhost:5432/fast-feet?schema=public"
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
