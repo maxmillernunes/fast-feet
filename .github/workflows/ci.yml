@@ -7,13 +7,74 @@ on:
     branches: [main]
 
 jobs:
-  build:
-    name: Build and push
+  lint-build:
+    name: Lint and Build
     runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm prisma generate
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Build
+        run: pnpm build
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: lint-build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm prisma generate
+
+      - name: Run unit tests
+        run: pnpm test
+
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: unit-tests
 
     services:
       postgres:
-        image: postgres
+        image: postgres:16-alpine
         env:
           POSTGRES_USER: ${{ vars.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
@@ -34,25 +95,19 @@ jobs:
           - /var/run/docker.sock:/var/run/docker.sock
 
     env:
-      # API
       PORT: 3333
-      
-      # Database
+
       DATABASE_SCHEMA: public
-      POSTGRES_HOST: localhost 
+      POSTGRES_HOST: localhost
       POSTGRES_PORT: 5432
       POSTGRES_USER: ${{ vars.POSTGRES_USER }}
       POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
       POSTGRES_DB: ${{ vars.POSTGRES_DB }}
-      
-      # Prisma URL
       DATABASE_URL: postgresql://${{ vars.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@localhost:5432/${{ vars.POSTGRES_DB }}?schema=public
 
-      # JWT
       JWT_PRIVATE_KEY: ${{ secrets.JWT_PRIVATE_KEY }}
       JWT_PUBLIC_KEY: ${{ secrets.JWT_PUBLIC_KEY }}
 
-      # AWS / S3
       AWS_REGION: ${{ vars.AWS_REGION }}
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -68,26 +123,26 @@ jobs:
         with:
           version: 11
 
-      - name: Set up node
+      - name: Set up Node
         uses: actions/setup-node@v6
         with:
-          node-version: 24
-          cache: 'pnpm'
+          node-version: 22
+          cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma client
         run: pnpm prisma generate
 
-      - name: Unit tests
-        run: pnpm test
+      - name: Run Prisma migrations
+        run: pnpm prisma migrate deploy
 
       - name: Wait for MiniStack to be ready
         run: |
           echo "Aguardando o MiniStack iniciar..."
           for i in {1..30}; do
-            if curl -f http://localhost:4566/_ministack/health > /dev/null 2>&1; then
+            if curl -sf http://localhost:4566/_ministack/health > /dev/null; then
               echo "MiniStack está pronto!"
               exit 0
             fi
@@ -97,9 +152,8 @@ jobs:
           echo "Erro: MiniStack não ficou pronto a tempo."
           exit 1
 
-      - name: Create S3 Buckets to run E2E tests
-        run: |
-          aws --endpoint-url=http://localhost:4566 s3 mb s3://fast-feet
+      - name: Create S3 bucket
+        run: aws --endpoint-url=http://localhost:4566 s3 mb s3://fast-feet
 
-      - name: E2E Tests
+      - name: Run E2E tests
         run: pnpm test:e2e
