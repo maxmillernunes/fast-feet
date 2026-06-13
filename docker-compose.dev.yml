@@ -3,7 +3,7 @@ services:
     container_name: api-dev
     build:
       context: .
-      target: dev
+      dockerfile: Dockerfile.dev
     ports:
       - "${PORT}:${PORT}"
     env_file:
@@ -20,21 +20,21 @@ services:
       - ./scripts:/app/scripts
       - ./package.json:/app/package.json
       - ./pnpm-lock.yaml:/app/pnpm-lock.yaml
-      - ./entrypoint.sh:/app/entrypoint.sh:cached
+      - ./entrypoint.dev.sh:/app/entrypoint.dev.sh:cached
       - /app/node_modules
     networks:
       - fast-feet-network-dev
 
   postgres:
     container_name: database-dev
-    image: postgres
+    image: postgres:16-alpine
     restart: unless-stopped
     env_file:
       - .env.development
     ports:
       - "${POSTGRES_PORT}:5432"
     volumes:
-      - pgdata-dev:/var/lib/postgresql
+      - pgdata-dev:/var/lib/postgresql/data
     healthcheck:
       test: pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}
       interval: 5s
