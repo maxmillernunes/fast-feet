@@ -46,6 +46,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: lint-build
 
+    env:
+      DATABASE_URL: "postgresql://user:pass@localhost:5432/db?schema=public"
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
