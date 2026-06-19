@@ -15,6 +15,7 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup
       - run: pnpm lint
 
@@ -22,6 +23,7 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup
       - run: pnpm build
 
@@ -29,6 +31,7 @@ jobs:
     name: Unit Tests
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup
       - run: pnpm test
 
@@ -74,6 +77,7 @@ jobs:
       AWS_ENDPOINT: http://localhost:4566
 
     steps:
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup
       - name: Run Prisma migrations
         run: pnpm prisma migrate deploy
