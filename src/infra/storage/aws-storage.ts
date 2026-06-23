@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { Injectable } from '@nestjs/common'
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
+import { S3Client, S3ClientConfig, PutObjectCommand } from '@aws-sdk/client-s3'
 import { EnvService } from '../env/env.service'
 
 import {
@@ -13,14 +13,23 @@ export class AwsStorage implements Uploader {
   private readonly client: S3Client
 
   constructor(private envService: EnvService) {
-    this.client = new S3Client({
-      region: envService.get('AWS_REGION'),
-      endpoint: envService.get('AWS_ENDPOINT'),
-      credentials: {
+    const region = envService.get('AWS_REGION')
+    const endpoint = envService.get('AWS_ENDPOINT')
+
+    const s3Config: S3ClientConfig = {
+      region,
+      forcePathStyle: !!endpoint,
+    }
+
+    if (endpoint) {
+      s3Config.endpoint = endpoint
+      s3Config.credentials = {
         accessKeyId: envService.get('AWS_ACCESS_KEY_ID'),
         secretAccessKey: envService.get('AWS_SECRET_ACCESS_KEY'),
-      },
-    })
+      }
+    }
+
+    this.client = new S3Client(s3Config)
   }
 
   async upload({

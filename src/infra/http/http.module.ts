@@ -62,9 +62,14 @@ import { FetchDriverOrdersUseCase } from '@/domain/logistics/application/use-cas
 import { FetchRecentOrdersUseCase as FetchOrdersByRecipientUseCase } from '@/domain/logistics/application/use-cases/fetch-orders-by-recipient-id'
 import { GetOrderDetailsByIdUseCase } from '@/domain/logistics/application/use-cases/get-order-details-by-id'
 
+// Health Controller
+import { HealthController } from './controllers/health.controller'
+
 @Module({
   imports: [DatabaseModule, CryptographyModule, StorageModule],
   controllers: [
+    HealthController,
+
     CreateAccountController,
     AuthenticateController,
     RegisterDeliveryDriverController,

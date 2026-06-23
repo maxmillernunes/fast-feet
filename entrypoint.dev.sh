@@ -10,7 +10,7 @@ echo "==> Executando seed..."
 prisma db seed
 
 echo "==> Criando bucket S3..."
-tsx scripts/create-bucket.ts
+tsx scripts/create-bucket-test.ts
 
 echo "==> Iniciando aplicação..."
 exec "$@"
