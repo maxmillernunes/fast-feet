@@ -2,6 +2,18 @@
 
 API de gerenciamento logístico para uma transportadora fictícia. Gerencia cadastro de usuários (administradores e entregadores), o ciclo de vida completo de encomendas e o registro de destinatários. Construída com **Domain-Driven Design**, **Clean Architecture** e **NestJS**.
 
+## Sumário
+
+- [Funcionalidades](#funcionalidades)
+- [Tecnologias](#tecnologias)
+- [Deploy / Infraestrutura](#deploy--infraestrutura)
+- [Primeiros passos](#primeiros-passos)
+- [API Endpoints](#api-endpoints)
+- [Máquina de estados](#máquina-de-estados-dos-pedidos)
+- [Arquitetura](#arquitetura)
+- [Estrutura de diretórios](#estrutura-de-diretórios)
+- [Licença](#licença)
+
 ---
 
 ## Funcionalidades
