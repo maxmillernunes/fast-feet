@@ -80,6 +80,33 @@ API de gerenciamento logístico para uma transportadora fictícia. Gerencia cada
 
 ---
 
+## Deploy / Infraestrutura
+
+A aplicação roda em produção na AWS via **ECS Express Mode**.
+
+▶️ URL: `https://<hash>.ecs.us-east-2.on.aws`
+
+### Recursos provisionados (Terraform)
+
+| Recurso | Descrição |
+|---------|-----------|
+| **ECS Express** | Serviço gerenciado com ALB + SSL + DNS + Auto Scaling |
+| **RDS PostgreSQL** | db.t3.micro, 20GB |
+| **S3** | Bucket para uploads de fotos |
+| **ECR** | Repositório de imagens Docker |
+| **Secrets Manager** | DATABASE_URL e chaves JWT |
+
+📁 A infraestrutura como código (Terraform) está em um [repositório separado](https://github.com/maxmillernunes/fast-feet-iac).
+
+### Pipeline CI/CD
+
+| Pipeline | O que faz |
+|----------|-----------|
+| **CI** | Build, testes, push da imagem `:main` para o ECR |
+| **CD** | Força novo deploy no ECS |
+
+---
+
 ## Primeiros passos
 
 ### Pré-requisitos
@@ -110,8 +137,8 @@ Variáveis necessárias:
 | `DATABASE_URL` | String de conexão PostgreSQL |
 | `JWT_PRIVATE_KEY` | Chave privada RSA (base64) |
 | `JWT_PUBLIC_KEY` | Chave pública RSA (base64) |
-| `AWS_ACCESS_KEY_ID` | AWS access key |
-| `AWS_SECRET_ACCESS_KEY` | AWS secret key |
+| `AWS_ACCESS_KEY_ID` | AWS access key (apenas desenvolvimento local) |
+| `AWS_SECRET_ACCESS_KEY` | AWS secret key (apenas desenvolvimento local) |
 | `AWS_REGION` | Região AWS |
 | `AWS_BUCKET_NAME` | Nome do bucket S3 |
 | `AWS_ENDPOINT` | Endpoint S3 (ex: `http://localhost:4566` para LocalStack) |

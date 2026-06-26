@@ -3,6 +3,9 @@
 /node_modules
 /build
 
+# docs superpowers
+/docs
+
 # Logs
 logs
 *.log
