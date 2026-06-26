@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/maxmillernunes/fast-feet/compare/v1.0.0...v1.1.0) (2026-06-23)
+
+
+### Features
+
+* :sparkles: add new route to health and add the CD to deploy on ECS Express mode ([b708772](https://github.com/maxmillernunes/fast-feet/commit/b708772a008270ab42adfb5466a359aa6e4ce8ff))
+
 # 1.0.0 (2026-06-23)
 
 
